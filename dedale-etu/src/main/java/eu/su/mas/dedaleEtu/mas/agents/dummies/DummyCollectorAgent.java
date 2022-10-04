@@ -1,9 +1,10 @@
 package eu.su.mas.dedaleEtu.mas.agents.dummies;
 
 
+import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
-import eu.su.mas.dedale.mas.agent.behaviours.startMyBehaviours;
+import eu.su.mas.dedale.mas.agent.behaviours.platformManagment.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -95,10 +96,10 @@ public class DummyCollectorAgent extends AbstractDedaleAgent{
 		@Override
 		public void onTick() {
 			//Example to retrieve the current position
-			String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
+			Location myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 
-			if (myPosition!=""){
-				List<Couple<String,List<Couple<Observation,Integer>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
+			if (myPosition!=null && myPosition.getLocationId()!=""){
+				List<Couple<Location,List<Couple<Observation,Integer>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
 				System.out.println(this.myAgent.getLocalName()+" -- list of observables: "+lobs);
 
 				//Little pause to allow you to follow what is going on
@@ -120,6 +121,7 @@ public class DummyCollectorAgent extends AbstractDedaleAgent{
 						
 						System.out.println(this.myAgent.getLocalName()+" - My treasure type is : "+((AbstractDedaleAgent) this.myAgent).getMyTreasureType());
 						System.out.println(this.myAgent.getLocalName()+" - My current backpack capacity is:"+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
+						System.out.println(this.myAgent.getLocalName()+" - I try to open the safe: "+((AbstractDedaleAgent) this.myAgent).openLock(Observation.GOLD));
 						System.out.println(this.myAgent.getLocalName()+" - Value of the treasure on the current position: "+o.getLeft() +": "+ o.getRight());
 						System.out.println(this.myAgent.getLocalName()+" - The agent grabbed :"+((AbstractDedaleAgent) this.myAgent).pick());
 						System.out.println(this.myAgent.getLocalName()+" - the remaining backpack capacity is: "+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
@@ -132,7 +134,7 @@ public class DummyCollectorAgent extends AbstractDedaleAgent{
 
 				//If the agent picked (part of) the treasure
 				if (b){
-					List<Couple<String,List<Couple<Observation,Integer>>>> lobs2=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
+					List<Couple<Location,List<Couple<Observation,Integer>>>> lobs2=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
 					System.out.println("State of the observations after picking "+lobs2);
 				}
 

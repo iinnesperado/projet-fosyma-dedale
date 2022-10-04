@@ -1,7 +1,7 @@
 [
 { 
   "agentType":"agentExplo",
-  "agentName": "1stAgent",
+  "agentName": "Explo1",
   "communicationRange": 3,
   "initialLocation": "free",
   "backPackCapacityGold": -1,
@@ -12,7 +12,7 @@
   },
 { 
   "agentType":"agentExplo",
-  "agentName": "2ndAgent",
+  "agentName": "Explo2",
   "communicationRange": 3,
   "initialLocation": "free",
   "backPackCapacityGold": -1,

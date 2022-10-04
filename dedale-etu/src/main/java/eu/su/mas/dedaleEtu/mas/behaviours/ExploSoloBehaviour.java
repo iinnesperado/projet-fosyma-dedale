@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Set;
 
 import dataStructures.tuple.Couple;
+import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
+import eu.su.mas.dedale.env.gs.gsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
@@ -61,11 +63,11 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
 			this.myMap= new MapRepresentation();
 		
 		//0) Retrieve the current position
-		String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
+		Location myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 	
 		if (myPosition!=null){
 			//List of observable from the agent's current position
-			List<Couple<String,List<Couple<Observation,Integer>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
+			List<Couple<Location,List<Couple<Observation,Integer>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
 
 			/**
 			 * Just added here to let you see what the agent is doing, otherwise he will be too quick
@@ -77,26 +79,26 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
 			}
 
 			//1) remove the current node from openlist and add it to closedNodes.
-			this.closedNodes.add(myPosition);
+			this.closedNodes.add(myPosition.getLocationId());
 			this.openNodes.remove(myPosition);
 
-			this.myMap.addNode(myPosition,MapAttribute.closed);
+			this.myMap.addNode(myPosition.getLocationId(),MapAttribute.closed);
 
 			//2) get the surrounding nodes and, if not in closedNodes, add them to open nodes.
-			String nextNode=null;
-			Iterator<Couple<String, List<Couple<Observation, Integer>>>> iter=lobs.iterator();
+			String nextNodeId=null;
+			Iterator<Couple<Location, List<Couple<Observation, Integer>>>> iter=lobs.iterator();
 			while(iter.hasNext()){
-				String nodeId=iter.next().getLeft();
-				if (!this.closedNodes.contains(nodeId)){
-					if (!this.openNodes.contains(nodeId)){
-						this.openNodes.add(nodeId);
-						this.myMap.addNode(nodeId, MapAttribute.open);
-						this.myMap.addEdge(myPosition, nodeId);	
+				Location accessibleLocation=iter.next().getLeft();
+				if (!this.closedNodes.contains(accessibleLocation)){
+					if (!this.openNodes.contains(accessibleLocation)){
+						this.openNodes.add(accessibleLocation.getLocationId());
+						this.myMap.addNode(accessibleLocation.getLocationId(), MapAttribute.open);
+						this.myMap.addEdge(myPosition.getLocationId(), accessibleLocation.getLocationId());	
 					}else{
 						//the node exist, but not necessarily the edge
-						this.myMap.addEdge(myPosition, nodeId);
+						this.myMap.addEdge(myPosition.getLocationId(), accessibleLocation.getLocationId());
 					}
-					if (nextNode==null) nextNode=nodeId;
+					if (nextNodeId==null) nextNodeId=accessibleLocation.getLocationId();
 				}
 			}
 
@@ -109,10 +111,10 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
 				//4) select next move.
 				//4.1 If there exist one open node directly reachable, go for it,
 				//	 otherwise choose one from the openNode list, compute the shortestPath and go for it
-				if (nextNode==null){
+				if (nextNodeId==null){
 					//no directly accessible openNode
 					//chose one, compute the path and take the first step.
-					nextNode=this.myMap.getShortestPath(myPosition, this.openNodes.get(0)).get(0);
+					nextNodeId=this.myMap.getShortestPath(myPosition.getLocationId(), this.openNodes.get(0)).get(0);
 				}
 				
 				
@@ -147,7 +149,7 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
 
 				//If the agent picked (part of) the treasure
 				if (b){
-					List<Couple<String,List<Couple<Observation,Integer>>>> lobs2=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
+					List<Couple<Location,List<Couple<Observation,Integer>>>> lobs2=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
 					System.out.println(this.myAgent.getLocalName()+" - State of the observations after picking "+lobs2);
 					
 					//Trying to store everything in the tanker
@@ -166,7 +168,7 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
 				/************************************************
 				 * 				END API CALL ILUSTRATION
 				 *************************************************/
-				((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
+				((AbstractDedaleAgent)this.myAgent).moveTo(new gsLocation(nextNodeId));
 			}
 
 		}
