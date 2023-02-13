@@ -69,7 +69,7 @@
   "agentType":"wumpus",
   "agentName": "G1",
   "communicationRange": 2,
-  "initialLocation": "M26",
+  "initialLocation": "h8",
   "backPackCapacityGold": 20,
   "backPackCapacityDiamond":80, 
   "detectionRadius": 2,

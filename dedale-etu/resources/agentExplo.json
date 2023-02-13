@@ -1,17 +1,6 @@
 [
 { 
   "agentType":"agentCollect",
-  "agentName": "Tim",
-  "communicationRange": 3,
-  "initialLocation": "free",
-  "backPackCapacityGold": 15,
-  "backPackCapacityDiamond":-1, 
-  "detectionRadius": 0,
-  "strengthExpertise": 1,
-  "lockPickingExpertise":3
-  },
-{ 
-  "agentType":"agentCollect",
   "agentName": "Elsa",
   "communicationRange": 3,
   "initialLocation": "free",
