@@ -39,21 +39,10 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
 	 */
 	private MapRepresentation myMap;
 
-	/**
-	 * Nodes known but not yet visited
-	 */
-	private List<String> openNodes;
-	/**
-	 * Visited nodes
-	 */
-	private Set<String> closedNodes;
-
-
 	public ExploSoloBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap) {
 		super(myagent);
 		this.myMap=myMap;
-		this.openNodes=new ArrayList<String>();
-		this.closedNodes=new HashSet<String>();
+		
 	}
 
 	@Override
@@ -79,34 +68,26 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
 			}
 
 			//1) remove the current node from openlist and add it to closedNodes.
-			this.closedNodes.add(myPosition.getLocationId());
-			this.openNodes.remove(myPosition);
-
 			this.myMap.addNode(myPosition.getLocationId(),MapAttribute.closed);
 
 			//2) get the surrounding nodes and, if not in closedNodes, add them to open nodes.
 			String nextNodeId=null;
 			Iterator<Couple<Location, List<Couple<Observation, Integer>>>> iter=lobs.iterator();
 			while(iter.hasNext()){
-				Location accessibleLocation=iter.next().getLeft();
-				if (!this.closedNodes.contains(accessibleLocation)){
-					if (!this.openNodes.contains(accessibleLocation)){
-						this.openNodes.add(accessibleLocation.getLocationId());
-						this.myMap.addNode(accessibleLocation.getLocationId(), MapAttribute.open);
-						this.myMap.addEdge(myPosition.getLocationId(), accessibleLocation.getLocationId());	
-					}else{
-						//the node exist, but not necessarily the edge
-						this.myMap.addEdge(myPosition.getLocationId(), accessibleLocation.getLocationId());
-					}
-					if (nextNodeId==null) nextNodeId=accessibleLocation.getLocationId();
+				Location accessibleNode=iter.next().getLeft();
+				boolean isNewNode=this.myMap.addNewNode(accessibleNode.getLocationId());
+				//the node may exist, but not necessarily the edge
+				if (myPosition.getLocationId()!=accessibleNode.getLocationId()) {
+					this.myMap.addEdge(myPosition.getLocationId(), accessibleNode.getLocationId());
+					if (nextNodeId==null && isNewNode) nextNodeId=accessibleNode.getLocationId();
 				}
 			}
 
 			//3) while openNodes is not empty, continues.
-			if (this.openNodes.isEmpty()){
+			if (!this.myMap.hasOpenNode()){
 				//Explo finished
 				finished=true;
-				System.out.println("Exploration successufully done, behaviour removed.");
+				System.out.println(this.myAgent.getLocalName()+" - Exploration successufully done, behaviour removed.");
 			}else{
 				//4) select next move.
 				//4.1 If there exist one open node directly reachable, go for it,
@@ -114,7 +95,10 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
 				if (nextNodeId==null){
 					//no directly accessible openNode
 					//chose one, compute the path and take the first step.
-					nextNodeId=this.myMap.getShortestPath(myPosition.getLocationId(), this.openNodes.get(0)).get(0);
+					nextNodeId=this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId()).get(0);//getShortestPath(myPosition,this.openNodes.get(0)).get(0);
+					//System.out.println(this.myAgent.getLocalName()+"-- list= "+this.myMap.getOpenNodes()+"| nextNode: "+nextNode);
+				}else {
+					//System.out.println("nextNode notNUll - "+this.myAgent.getLocalName()+"-- list= "+this.myMap.getOpenNodes()+"\n -- nextNode: "+nextNode);
 				}
 				
 				
