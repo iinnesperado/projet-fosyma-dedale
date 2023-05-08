@@ -57,7 +57,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
 /**
  * 
- * @param myagent
+ * @param myagent reference to the agent we are adding this behaviour to
  * @param myMap known map of the world the agent is living in
  * @param agentNames name of the agents to share the map with
  */

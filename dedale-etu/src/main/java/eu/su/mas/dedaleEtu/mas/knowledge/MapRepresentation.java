@@ -79,8 +79,8 @@ public class MapRepresentation implements Serializable {
 
 	/**
 	 * Add or replace a node and its attribute 
-	 * @param id
-	 * @param mapAttribute
+	 * @param id unique identifier of the node
+	 * @param mapAttribute attribute to process
 	 */
 	public synchronized void addNode(String id,MapAttribute mapAttribute){
 		Node n;
@@ -110,8 +110,8 @@ public class MapRepresentation implements Serializable {
 
 	/**
 	 * Add an undirect edge if not already existing.
-	 * @param idNode1
-	 * @param idNode2
+	 * @param idNode1 unique identifier of node1
+	 * @param idNode2 unique identifier of node2
 	 */
 	public synchronized void addEdge(String idNode1,String idNode2){
 		this.nbEdges++;

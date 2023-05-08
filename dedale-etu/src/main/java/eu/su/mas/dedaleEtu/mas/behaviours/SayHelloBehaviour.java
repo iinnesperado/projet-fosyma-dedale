@@ -35,6 +35,7 @@ public class SayHelloBehaviour extends TickerBehaviour{
 
 		//A message is defined by : a performative, a sender, a set of receivers, (a protocol),(a content (and/or contentOBject))
 		ACLMessage msg=new ACLMessage(ACLMessage.INFORM);
+		
 		msg.setSender(this.myAgent.getAID());
 		msg.setProtocol("UselessProtocol");
 

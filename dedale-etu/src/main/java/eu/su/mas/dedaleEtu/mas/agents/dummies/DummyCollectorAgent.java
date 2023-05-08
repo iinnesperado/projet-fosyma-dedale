@@ -75,7 +75,7 @@ public class DummyCollectorAgent extends AbstractDedaleAgent{
 	 * This behaviour is triggerable every 600ms.
 	 *  It tries all the API methods at each time step, store the treasure that match the entity treasureType in its backpack and intends to 
 	 *  empty its backPack in the Tanker agent (if he is in reach)
-	 *<br/>
+	 *<p>
 	 *
 	 *  Rmq : This behaviour is in the same class as the DummyCollectorAgent for clarity reasons. You should prefer to save your behaviours in the behaviours package, and all the behaviours referring to a given protocol in the same class    
 	 *	
@@ -103,12 +103,12 @@ public class DummyCollectorAgent extends AbstractDedaleAgent{
 				System.out.println(this.myAgent.getLocalName()+" -- list of observables: "+lobs);
 
 				//Little pause to allow you to follow what is going on
-				try {
-					System.out.println("Press enter in the console to allow the agent "+this.myAgent.getLocalName() +" to execute its next move");
-					System.in.read();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+//				try {
+//					System.out.println("Press enter in the console to allow the agent "+this.myAgent.getLocalName() +" to execute its next move");
+//					System.in.read();
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
 				
 				//list of observations associated to the currentPosition
 				List<Couple<Observation,Integer>> lObservations= lobs.get(0).getRight();
@@ -140,7 +140,7 @@ public class DummyCollectorAgent extends AbstractDedaleAgent{
 
 				//Trying to store everything in the tanker
 				System.out.println(this.myAgent.getLocalName()+" - My current backpack capacity is:"+ ((AbstractDedaleAgent)this.myAgent).getBackPackFreeSpace());
-				System.out.println(this.myAgent.getLocalName()+" - The agent tries to transfer is load into the Silo (if reachable); succes ? : "+((AbstractDedaleAgent)this.myAgent).emptyMyBackPack("Silo"));
+				System.out.println(this.myAgent.getLocalName()+" - The agent tries to transfer is load into the Silo (if reachable); succes ? : "+((AbstractDedaleAgent)this.myAgent).emptyMyBackPack("Tank"));
 				System.out.println(this.myAgent.getLocalName()+" - My current backpack capacity is:"+ ((AbstractDedaleAgent)this.myAgent).getBackPackFreeSpace());
 
 				//Random move from the current position

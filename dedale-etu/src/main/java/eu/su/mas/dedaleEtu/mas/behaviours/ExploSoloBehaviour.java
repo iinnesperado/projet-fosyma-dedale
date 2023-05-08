@@ -18,12 +18,13 @@ import jade.core.behaviours.SimpleBehaviour;
 
 /**
  * This behaviour allows an agent to explore the environment and learn the associated topological map.
- * The algorithm is a pseudo - DFS computationally consuming because its not optimised at all.</br>
+ * The algorithm is a pseudo - DFS computationally consuming because its not optimised at all.
+ * <p>
  * 
- * When all the nodes around him are visited, the agent randomly select an open node and go there to restart its dfs.</br> 
- * This (non optimal) behaviour is done until all nodes are explored. </br> 
+ * When all the nodes around him are visited, the agent randomly select an open node and go there to restart its dfs.<p>
+ * This (non optimal) behaviour is done until all nodes are explored. <p> 
  * 
- * Warning, this behaviour does not save the content of visited nodes, only the topology.</br> 
+ * Warning, this behaviour does not save the content of visited nodes, only the topology.<p> 
  * Warning, this behaviour is a solo exploration and does not take into account the presence of other agents (or well) and indefinitely tries to reach its target node
  * @author hc
  *

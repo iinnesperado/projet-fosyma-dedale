@@ -18,7 +18,7 @@ import jade.core.behaviours.TickerBehaviour;
 
 /**
  * Dummy Tanker agent. It does nothing more than printing what it observes every 10s and receiving the treasures from other agents. 
- * <br/>
+ * <p>
  * Note that this last behaviour is hidden, every tanker agent automatically possess it.
  * 
  * @author hc
