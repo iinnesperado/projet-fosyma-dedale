@@ -30,7 +30,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven-compiler.version>3.12.1</maven-compiler.version>
 		<junit.version>4.13.2</junit.version>
-		<plantuml.version>8036</plantuml.version>
+		<plantuml.version>1.2023.10</plantuml.version>
 		<javafx.version>21.0.2</javafx.version>
 		<gs-core.version>2.0</gs-core.version>
 		<jackson.version>2.14.3</jackson.version>
@@ -88,13 +88,13 @@
 			<artifactId>javafx-controls</artifactId>
 			<version>${javafx.version}</version>
 		</dependency>
-
+<!--
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-base</artifactId>
 			<version>${javafx.version}</version>
 		</dependency>
-
+ -->
 		<!--  Jade -->
 		<dependency>
     		<groupId>com.gitlab.jade-project</groupId>
@@ -189,8 +189,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>${maven-compiler.version}</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>21</source>
+					<target>21</target>
 				</configuration>
 			</plugin>
 		</plugins>

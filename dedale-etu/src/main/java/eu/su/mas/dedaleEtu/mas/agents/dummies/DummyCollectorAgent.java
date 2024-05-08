@@ -99,7 +99,7 @@ public class DummyCollectorAgent extends AbstractDedaleAgent{
 			Location myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 
 			if (myPosition!=null && myPosition.getLocationId()!=""){
-				List<Couple<Location,List<Couple<Observation,Integer>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
+				List<Couple<Location,List<Couple<Observation,String>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
 				System.out.println(this.myAgent.getLocalName()+" -- list of observables: "+lobs);
 
 				//Little pause to allow you to follow what is going on
@@ -111,11 +111,11 @@ public class DummyCollectorAgent extends AbstractDedaleAgent{
 //				}
 				
 				//list of observations associated to the currentPosition
-				List<Couple<Observation,Integer>> lObservations= lobs.get(0).getRight();
+				List<Couple<Observation,String>> lObservations= lobs.get(0).getRight();
 
 				//example related to the use of the backpack for the treasure hunt
 				Boolean b=false;
-				for(Couple<Observation,Integer> o:lObservations){
+				for(Couple<Observation,String> o:lObservations){
 					switch (o.getLeft()) {
 					case DIAMOND:case GOLD:
 						
@@ -134,7 +134,7 @@ public class DummyCollectorAgent extends AbstractDedaleAgent{
 
 				//If the agent picked (part of) the treasure
 				if (b){
-					List<Couple<Location,List<Couple<Observation,Integer>>>> lobs2=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
+					List<Couple<Location,List<Couple<Observation,String>>>> lobs2=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
 					System.out.println("State of the observations after picking "+lobs2);
 				}
 

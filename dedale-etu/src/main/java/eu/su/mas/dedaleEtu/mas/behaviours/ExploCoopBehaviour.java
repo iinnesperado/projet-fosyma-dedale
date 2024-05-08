@@ -74,7 +74,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
 		if (myPosition!=null){
 			//List of observable from the agent's current position
-			List<Couple<Location,List<Couple<Observation,Integer>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
+			List<Couple<Location,List<Couple<Observation,String>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
 
 			/**
 			 * Just added here to let you see what the agent is doing, otherwise he will be too quick
@@ -90,7 +90,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
 			//2) get the surrounding nodes and, if not in closedNodes, add them to open nodes.
 			String nextNodeId=null;
-			Iterator<Couple<Location, List<Couple<Observation, Integer>>>> iter=lobs.iterator();
+			Iterator<Couple<Location, List<Couple<Observation, String>>>> iter=lobs.iterator();
 			while(iter.hasNext()){
 				Location accessibleNode=iter.next().getLeft();
 				boolean isNewNode=this.myMap.addNewNode(accessibleNode.getLocationId());

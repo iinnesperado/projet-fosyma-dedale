@@ -57,7 +57,7 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
 	
 		if (myPosition!=null){
 			//List of observable from the agent's current position
-			List<Couple<Location,List<Couple<Observation,Integer>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
+			List<Couple<Location,List<Couple<Observation,String>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
 
 			/**
 			 * Just added here to let you see what the agent is doing, otherwise he will be too quick
@@ -73,7 +73,7 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
 
 			//2) get the surrounding nodes and, if not in closedNodes, add them to open nodes.
 			String nextNodeId=null;
-			Iterator<Couple<Location, List<Couple<Observation, Integer>>>> iter=lobs.iterator();
+			Iterator<Couple<Location, List<Couple<Observation, String>>>> iter=lobs.iterator();
 			while(iter.hasNext()){
 				Location accessibleNode=iter.next().getLeft();
 				boolean isNewNode=this.myMap.addNewNode(accessibleNode.getLocationId());
@@ -109,12 +109,12 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
 				*****************************************************/
 
 				//list of observations associated to the currentPosition
-				List<Couple<Observation,Integer>> lObservations= lobs.get(0).getRight();
+				List<Couple<Observation,String>> lObservations= lobs.get(0).getRight();
 				System.out.println(this.myAgent.getLocalName()+" - State of the observations : "+lobs);
 				
 				//example related to the use of the backpack for the treasure hunt
 				Boolean b=false;
-				for(Couple<Observation,Integer> o:lObservations){
+				for(Couple<Observation,String> o:lObservations){
 					switch (o.getLeft()) {
 					case DIAMOND:case GOLD:
 
@@ -134,7 +134,7 @@ public class ExploSoloBehaviour extends SimpleBehaviour {
 
 				//If the agent picked (part of) the treasure
 				if (b){
-					List<Couple<Location,List<Couple<Observation,Integer>>>> lobs2=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
+					List<Couple<Location,List<Couple<Observation,String>>>> lobs2=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
 					System.out.println(this.myAgent.getLocalName()+" - State of the observations after picking "+lobs2);
 					
 					//Trying to store everything in the tanker

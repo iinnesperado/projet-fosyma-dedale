@@ -1,55 +1,55 @@
 DGS004
 null 0 0
 an h1  
-cn h1 Label:h1 
+cn h1 label:h1 
 an h2  
-cn h2 Label:h2 
+cn h2 label:h2 
 an h3  
-cn h3 Label:h3 
+cn h3 label:h3 
 an h4  
-cn h4 Label:h4 
+cn h4 label:h4 
 an h5  
-cn h5 Label:h5 
+cn h5 label:h5 
 an h6  
-cn h6 Label:h6 
+cn h6 label:h6 
 an h7  
-cn h7 Label:h7 
+cn h7 label:h7 
 an h8  
-cn h8 Label:h8 
+cn h8 label:h8 
 an h9  
-cn h9 Label:h9 
+cn h9 label:h9 
 an h11  
-cn h11 Label:h11 
+cn h11 label:h11 
 an h12  
-cn h12 Label:h12 
+cn h12 label:h12 
 an h13  
-cn h13 Label:h13 
+cn h13 label:h13 
 an h14  
-cn h14 Label:h14 
+cn h14 label:h14 
 an h15  
-cn h15 Label:h15 
+cn h15 label:h15 
 an h16  
-cn h16 Label:h16 
+cn h16 label:h16 
 an h17  
-cn h17 Label:h17 
+cn h17 label:h17 
 an h18  
-cn h18 Label:h18 
+cn h18 label:h18 
 an h19  
-cn h19 Label:h19 
+cn h19 label:h19 
 an h20  
-cn h20 Label:h20 
+cn h20 label:h20 
 an h21  
-cn h21 Label:h21 
+cn h21 label:h21 
 an h22  
-cn h22 Label:h22 
+cn h22 label:h22 
 an h23  
-cn h23 Label:h23 
+cn h23 label:h23 
 an h25  
-cn h25 Label:h25 
+cn h25 label:h25 
 an h26  
-cn h26 Label:h26 
+cn h26 label:h26 
 an h40  
-cn h40 Label:h40 
+cn h40 label:h40 
 ae he1 h1 h2
 ae he2 h1 h3
 ae he3 h1 h4

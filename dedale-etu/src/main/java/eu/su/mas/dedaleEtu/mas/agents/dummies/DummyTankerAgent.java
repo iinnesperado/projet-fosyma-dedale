@@ -88,7 +88,7 @@ class RandomTankerBehaviour extends TickerBehaviour{
 
 		if (myPosition!=null){
 			//List of observable from the agent's current position
-			List<Couple<Location,List<Couple<Observation,Integer>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
+			List<Couple<Location,List<Couple<Observation,String>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
 			System.out.println(this.myAgent.getLocalName()+" -- list of observables: "+lobs);
 		
 		}
