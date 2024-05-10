@@ -13,7 +13,7 @@
 { 
   "agentType":"agentExplo",
   "agentName": "Explo2",
-  "communicationRange": 3,
+  "communicationRange": 4,
   "initialLocation": "free",
   "backPackCapacityGold": -1,
   "backPackCapacityDiamond":-1, 

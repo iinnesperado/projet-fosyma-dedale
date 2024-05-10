@@ -1,10 +1,10 @@
 [
 { 
-  "agentType":"agentCollect",
+  "agentType":"agentExplo",
   "agentName": "Elsa",
   "communicationRange": 3,
   "initialLocation": "free",
-  "backPackCapacityGold": 100,
+  "backPackCapacityGold": -1,
   "backPackCapacityDiamond":-1, 
   "detectionRadius": 0,
   "strengthExpertise": 2,
