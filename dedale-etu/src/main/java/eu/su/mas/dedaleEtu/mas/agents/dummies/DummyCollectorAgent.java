@@ -58,8 +58,19 @@ public class DummyCollectorAgent extends AbstractDedaleAgent{
 	 * This method is automatically called after doDelete()
 	 */
 	protected void takeDown(){
-
+		super.takeDown();
 	}
+
+	protected void beforeMove(){
+		super.beforeMove();
+		//System.out.println("I migrate");
+	}
+
+	protected void afterMove(){
+		super.afterMove();
+		//System.out.println("I migrated");
+	}
+
 
 
 	/**************************************
