@@ -46,7 +46,7 @@ public class DummyCollectorAgent extends AbstractDedaleAgent{
 		List<Behaviour> lb=new ArrayList<Behaviour>();
 		lb.add(new RandomWalkExchangeBehaviour(this));
 
-		addBehaviour(new startMyBehaviours(this,lb));
+		addBehaviour(new StartMyBehaviours(this,lb));
 
 		System.out.println("the  agent "+this.getLocalName()+ " is started");
 

@@ -83,7 +83,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		 */
 		
 		
-		addBehaviour(new startMyBehaviours(this,lb));
+		addBehaviour(new StartMyBehaviours(this,lb));
 		
 		System.out.println("the  agent "+this.getLocalName()+ " is started");
 

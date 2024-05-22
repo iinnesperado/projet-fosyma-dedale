@@ -56,7 +56,7 @@ public class DummyMovingAgent extends AbstractDedaleAgent{
 		 * MANDATORY TO ALLOW YOUR AGENT TO BE DEPLOYED CORRECTLY
 		 */
 		
-		addBehaviour(new startMyBehaviours(this,lb));
+		addBehaviour(new StartMyBehaviours(this,lb));
 
 	}
 
