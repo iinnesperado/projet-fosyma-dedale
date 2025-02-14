@@ -7,9 +7,13 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.platformManagment.*;
 
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploCoopBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ReceiveMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.SayHelloBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.SendMapBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.FSMBehaviour;
 
 /**
  * <pre>
@@ -66,7 +70,19 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 			}
 		}
 
-		List<Behaviour> lb=new ArrayList<Behaviour>();
+
+		FSMBehaviour fsm = new FSMBehaviour(this);
+		fsm.registerFirstState(new ExploCoopBehaviour(this,this.myMap,list_agentNames), "Exploration");
+		fsm.registerState(new SayHelloBehaviour(this,this.myMap,list_agentNames), "Say Hello");
+		fsm.registerState(new ReceiveMapBehaviour(this,this.myMap,list_agentNames), "Receive Map");
+		
+		
+		fsm.registerDefaultTransition("Exploration","Say Hello");
+		fsm.registerTransition("Say Hello", "Receive Map", 1);
+		fsm.registerTransition("Receive Map", "Exploration", 1);
+		fsm.registerTransition("Receive Map", "Say Hello", 0);
+		fsm.registerTransition("Exploration", "Say Hello", 1);
+		
 		
 		/************************************************
 		 * 
@@ -74,15 +90,14 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		 * 
 		 ************************************************/
 		
-		lb.add(new ExploCoopBehaviour(this,this.myMap,list_agentNames));
-
-		
-		
 		/***
 		 * MANDATORY TO ALLOW YOUR AGENT TO BE DEPLOYED CORRECTLY
 		 */
 		
-		
+		List<Behaviour> lb=new ArrayList<Behaviour>();
+		lb.add(fsm);
+		lb.add(new SendMapBehaviour(this,this.myMap,list_agentNames));
+
 		addBehaviour(new StartMyBehaviours(this,lb));
 		
 		System.out.println("the  agent "+this.getLocalName()+ " is started");

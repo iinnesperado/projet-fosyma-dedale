@@ -67,7 +67,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
 		if(this.myMap==null) {
 			this.myMap= new MapRepresentation();
-			this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent,500,this.myMap,list_agentNames));
 		}
 
 		//0) Retrieve the current position
@@ -119,7 +118,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				}else {
 					//System.out.println("nextNode notNUll - "+this.myAgent.getLocalName()+"-- list= "+this.myMap.getOpenNodes()+"\n -- nextNode: "+nextNode);
 				}
-				
+				/*
 				//5) At each time step, the agent check if he received a graph from a teammate. 	
 				// If it was written properly, this sharing action should be in a dedicated behaviour set.
 				MessageTemplate msgTemplate=MessageTemplate.and(
@@ -136,7 +135,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 					}
 					this.myMap.mergeMap(sgreceived);
 				}
-
+				*/
 				((AbstractDedaleAgent)this.myAgent).moveTo(new GsLocation(nextNodeId));
 			}
 
