@@ -1,5 +1,6 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -80,7 +81,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 			 * Just added here to let you see what the agent is doing, otherwise he will be too quick
 			 */
 			try {
-				this.myAgent.doWait(1000);
+				this.myAgent.doWait(3000);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -136,6 +137,27 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 					this.myMap.mergeMap(sgreceived);
 				}
 				*/
+				if (lobs != null) {
+				    List<String> agentNames = new ArrayList<String>();
+				    String nextNodeId1 = null;
+				    Iterator<Couple<Location, List<Couple<Observation, String>>>> iter1 = lobs.iterator();
+
+				    while (iter1.hasNext()) {
+				        Couple<Location, List<Couple<Observation, String>>> couple = iter1.next();
+				        List<Couple<Observation, String>> observations = couple.getRight(); // Récupérer la liste
+
+				        if (!observations.isEmpty() && !couple.getLeft().equals(myPosition)) { // si la position de la liste n'est pas celui de l'agent qui observe
+				            for (Couple<Observation, String> obs : observations) {
+				                agentNames.add(obs.getRight()); // Récupérer la valeur String et l'ajouter à agentNames
+				            }
+				            this.myAgent.addBehaviour(new SendMapBehaviour((AbstractDedaleAgent) this.myAgent, this.myMap, agentNames));
+				            this.myAgent.addBehaviour(new ReceiveMapBehaviour(this.myAgent, this.myMap, agentNames));
+				            
+				        } else {
+				        }
+				    }
+				}
+
 				((AbstractDedaleAgent)this.myAgent).moveTo(new GsLocation(nextNodeId));
 			}
 

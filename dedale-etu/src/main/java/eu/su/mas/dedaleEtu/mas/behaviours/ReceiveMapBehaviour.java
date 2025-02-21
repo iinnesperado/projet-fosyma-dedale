@@ -72,6 +72,7 @@ public class ReceiveMapBehaviour extends OneShotBehaviour{
 				e.printStackTrace();
 			}
 			this.myMap.mergeMap(sgreceived);
+			System.out.println(this.myAgent.getName()+" a reçu une map");
 		}else {
 			block(3000);
 		}

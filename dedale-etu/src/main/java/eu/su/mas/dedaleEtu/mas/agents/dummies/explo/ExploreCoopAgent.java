@@ -69,20 +69,6 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 				i++;
 			}
 		}
-
-
-		FSMBehaviour fsm = new FSMBehaviour(this);
-		fsm.registerFirstState(new ExploCoopBehaviour(this,this.myMap,list_agentNames), "Exploration");
-		fsm.registerState(new SayHelloBehaviour(this,this.myMap,list_agentNames), "Say Hello");
-		fsm.registerState(new ReceiveMapBehaviour(this,this.myMap,list_agentNames), "Receive Map");
-		
-		
-		fsm.registerDefaultTransition("Exploration","Say Hello");
-		fsm.registerTransition("Say Hello", "Receive Map", 1);
-		fsm.registerTransition("Receive Map", "Exploration", 1);
-		fsm.registerTransition("Receive Map", "Say Hello", 0);
-		fsm.registerTransition("Exploration", "Say Hello", 1);
-		
 		
 		/************************************************
 		 * 
@@ -95,9 +81,8 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		 */
 		
 		List<Behaviour> lb=new ArrayList<Behaviour>();
-		lb.add(fsm);
-		lb.add(new SendMapBehaviour(this,this.myMap,list_agentNames));
-
+		lb.add(new ExploCoopBehaviour(this, this.myMap,list_agentNames));
+		
 		addBehaviour(new StartMyBehaviours(this,lb));
 		
 		System.out.println("the  agent "+this.getLocalName()+ " is started");
@@ -114,12 +99,12 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 
 	protected void beforeMove(){
 		super.beforeMove();
-		//System.out.println("I migrate");
+		System.out.println("I migrate");
 	}
 
 	protected void afterMove(){
 		super.afterMove();
-		//System.out.println("I migrated");
+		System.out.println("I migrated");
 	}
 
 }

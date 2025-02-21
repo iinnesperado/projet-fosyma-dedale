@@ -43,28 +43,22 @@ public class SendMapBehaviour extends SimpleBehaviour{
 
 	@Override
 	public void action() {
-		
-		MessageTemplate msgTemplate=MessageTemplate.and(
-				MessageTemplate.MatchProtocol("Hello"),
-				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-		ACLMessage msgReceived=this.myAgent.receive(msgTemplate);
-		
-		if (msgReceived!=null) {
-			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-			msg.setProtocol("SHARE-TOPO");
-			msg.setSender(this.myAgent.getAID());
-			for (String agentName : list_agentNames) {
-				msg.addReceiver(new AID(agentName,AID.ISLOCALNAME));
-			}
-				
-			SerializableSimpleGraph<String, MapAttribute> sg=this.myMap.getSerializableGraph();
-			try {					
-				msg.setContentObject(sg);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+		msg.setProtocol("SHARE-TOPO");
+		msg.setSender(this.myAgent.getAID());
+		for (String agentName : list_agentNames) {
+			msg.addReceiver(new AID(agentName,AID.ISLOCALNAME));
 		}
+			
+		SerializableSimpleGraph<String, MapAttribute> sg=this.myMap.getSerializableGraph();
+		try {					
+			msg.setContentObject(sg);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+		System.out.println(this.myAgent.getName()+" a envoyé une map");
+		finished=true;
 	}
 	
 	@Override
