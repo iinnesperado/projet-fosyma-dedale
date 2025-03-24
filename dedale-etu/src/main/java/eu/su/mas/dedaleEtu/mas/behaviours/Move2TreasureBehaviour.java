@@ -17,7 +17,7 @@ public class Move2TreasureBehaviour extends SimpleBehaviour{
     private static final long serialVersionUID = -4182946470338993682L;
     private MapRepresentation myMap;
     private List<Couple<String, Observation>> treasuresLocation;
-    private List<String> treasurePath;
+    private List<String> myPath; // path to take to the nearest treasure of of the same treasure type as the agent
 
     public Move2TreasureBehaviour(final AbstractDedaleAgent agent, MapRepresentation myMap, List<Couple<String, Observation>> treasuresLocation){
         super(agent);
@@ -28,21 +28,27 @@ public class Move2TreasureBehaviour extends SimpleBehaviour{
     @Override
     public void action() {
         Location myPosition = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
-        
+        Observation treasureType = ((AbstractDedaleAgent)this.myAgent).getMyTreasureType();
         
         // On donne un trajet au robot à réaliser vers le trésor le plus proche à sa position
-        if (treasurePath == null) {
+        if (myPath == null) {
+            // TODO check bc one of the cases is that the robot is at the location of the treasure so it can try to open it 
+
+
             for (Couple<String, Observation> location : treasuresLocation) {
-                List<String> candidatePath = myMap.getShortestPath(myPosition.getLocationId(), location.getLeft());
-                if (candidatePath.size() < treasurePath.size()) {
-                    treasurePath = candidatePath;
+                // Only looks for shortedt path of treasures of its own type
+                if (treasureType.getName().equals(location.getRight().getName())){
+                    List<String> candidatePath = myMap.getShortestPath(myPosition.getLocationId(), location.getLeft());
+                    if (candidatePath.size() < myPath.size()) {
+                        myPath = candidatePath;
+                    }
                 }
             }
+        } else {
+            // si le robot a déjà un trésor obj donc il a déjà un chemin à faire il suit le chemin 
+            ((AbstractDedaleAgent)this.myAgent).moveTo(new GsLocation(myPath.getFirst()));
+            myPath.removeFirst();
         }
-
-        // si le robot a déjà un trésor obj donc il a déjà un chemin à faire il suit le chemin 
-        ((AbstractDedaleAgent)this.myAgent).moveTo(new GsLocation(treasurePath.getFirst()));
-        treasurePath.removeFirst();
     }
 
     @Override
