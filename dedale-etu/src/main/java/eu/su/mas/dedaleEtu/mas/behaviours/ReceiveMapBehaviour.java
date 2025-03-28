@@ -10,16 +10,16 @@ import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 
-public class ReceiveMapBehaviour extends OneShotBehaviour{
+public class ReceiveMapBehaviour extends OneShotBehaviour {
 
 	private static final long serialVersionUID = -1082324081791796312L;
 
-	
-	private List<String> list_agentNames;	
+	private List<String> list_agentNames;
 	private boolean finished = false;
 
 	/**
@@ -27,56 +27,67 @@ public class ReceiveMapBehaviour extends OneShotBehaviour{
 	 */
 	private MapRepresentation myMap;
 
-	
 	public ReceiveMapBehaviour(final Agent myAgent, MapRepresentation myMap, List<String> agentNames) {
 		super(myAgent);
-		this.myMap=myMap;
-		this.list_agentNames=agentNames;
+		this.myMap = myMap;
+		this.list_agentNames = agentNames;
 	}
-	
+
 	@Override
 	public void action() {
-		/*
-	}
-		MessageTemplate msgTemplate=MessageTemplate.and(
-				MessageTemplate.MatchProtocol("SHARE-TOPO"),
+
+		// On s'attend à recevoir un PING
+		// Création du template pour recevoir un message de type PING
+		MessageTemplate msgTemplate = MessageTemplate.and(
+				MessageTemplate.MatchProtocol("PING"),
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-		ACLMessage msgReceived=this.myAgent.receive(msgTemplate);
-		
-		if (msgReceived!=null) {
-			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-			msg.setProtocol("BIEN-REÇU");
-			msg.setSender(this.myAgent.getAID());
-			for (String agentName : list_agentNames) {
-				msg.addReceiver(new AID(agentName,AID.ISLOCALNAME));
-			}
-				
-			SerializableSimpleGraph<String, MapAttribute> sg=this.myMap.getSerializableGraph();
-			try {					
-				msg.setContentObject(sg);
+		ACLMessage msgReceived = this.myAgent.blockingReceive(msgTemplate, 5000);
+
+		// Si on reçoit un message PING on répond avec un PONG
+		if (msgReceived != null) {
+			System.out.println(this.myAgent.getName() + " a reçu un ping");
+			ACLMessage pong = new ACLMessage(ACLMessage.INFORM);
+			pong.setProtocol("PONG");
+			pong.setSender(this.myAgent.getAID());
+			pong.addReceiver(msgReceived.getSender());
+			try {
+				pong.setContentObject("PONG");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-		*/
-		MessageTemplate msgTemplate=MessageTemplate.and(
-				MessageTemplate.MatchProtocol("SHARE-TOPO"),
-				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-		ACLMessage msgReceived=this.myAgent.receive(msgTemplate);
-		if (msgReceived!=null) {
-			SerializableSimpleGraph<String, MapAttribute> sgreceived=null;
-			try {
-				sgreceived = (SerializableSimpleGraph<String, MapAttribute>)msgReceived.getContentObject();
-			} catch (UnreadableException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			this.myMap.mergeMap(sgreceived);
-			System.out.println(this.myAgent.getName()+" a reçu une map");
-		}else {
-			block(3000);
-		}
+			this.myAgent.send(pong);
+			System.out.println(this.myAgent.getName() + " a envoyé un pong");
 
+			// On s'attend à recevoir une map
+			msgTemplate = MessageTemplate.and(
+					MessageTemplate.MatchProtocol("SHARE-TOPO"),
+					MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+			msgReceived = this.myAgent.blockingReceive(msgTemplate, 5000);
+
+			if (msgReceived != null) {
+				SerializableSimpleGraph<String, MapAttribute> sgreceived = null;
+				try {
+					sgreceived = (SerializableSimpleGraph<String, MapAttribute>) msgReceived.getContentObject();
+				} catch (UnreadableException e) {
+					e.printStackTrace();
+				}
+
+				if (sgreceived != null) {
+					this.myMap.mergeMap(sgreceived);
+					System.out.println(this.myAgent.getName() + " a fusionné la carte de "
+							+ msgReceived.getSender().getLocalName() + " avec sa carte");
+				}
+
+				// Accusé de réception de la map
+				ACLMessage ack = new ACLMessage(ACLMessage.INFORM);
+				ack.setProtocol("ACK");
+				ack.setSender(this.myAgent.getAID());
+				ack.addReceiver(msgReceived.getSender());
+				this.myAgent.send(ack);
+				System.out.println(this.myAgent.getName() + " a envoyé un ack");
+			}
+		}
+		finished = true;
 	}
 
 }
