@@ -65,7 +65,7 @@ public class SayHelloBehaviour extends SimpleBehaviour{
 			((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
 			
 		}
-		System.out.println("J'ai dit hello ");
+		System.out.println("Agent "+this.myAgent.getLocalName()+ " a dit bonjour");
 		this.finished=true;
 	}
 
