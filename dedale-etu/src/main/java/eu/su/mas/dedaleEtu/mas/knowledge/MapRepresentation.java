@@ -101,11 +101,11 @@ public class MapRepresentation implements Serializable {
 		this.g.setAttribute("ui.stylesheet",nodeStyle);
 		this.agentName=agentName;
 
-		Platform.runLater(() -> {
-			//openGui();
-			openGui4();
+		// Platform.runLater(() -> {
+		// 	//openGui();
+		// 	openGui4();
 			
-		});
+		// });
 		this.nbEdges=0;
 	}
 	
@@ -303,7 +303,7 @@ public class MapRepresentation implements Serializable {
 	/**
 	 * Method called after a migration to reopen default GUI component
 	 */
-	private synchronized void openGui4() {
+	public synchronized void openGui4() {
 
 		Stage primaryStage = new Stage();
 		StackPane newRoot = new StackPane();
