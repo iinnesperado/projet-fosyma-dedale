@@ -297,7 +297,9 @@ public class MapRepresentation implements Serializable {
 			}
 			if (!alreadyIn) {
 				newnode.setAttribute("ui.label", newnode.getId());
-				newnode.setAttribute("ui.class", n.getNodeContent().toString());
+				// newnode.setAttribute("ui.class", n.getNodeContent().toString());
+				// on le merge en rose
+				newnode.setAttribute("ui.class", MapAttribute.shared.toString());
 			} else {
 				newnode = this.g.getNode(n.getNodeId());
 				// 3 check its attribute. If it is below the one received, update it.

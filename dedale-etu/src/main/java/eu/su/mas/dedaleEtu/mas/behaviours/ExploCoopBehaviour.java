@@ -1,5 +1,6 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -15,6 +16,8 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.knowledge.TresorInfo;
+import eu.su.mas.dedaleEtu.mas.knowledge.TresorMessage;
 
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -56,6 +59,9 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
 	private List<String> agentsEnExploration;
 
+	private List<TresorInfo> listeTresors = new ArrayList<>();
+	private LocalDateTime derniereMajTresors;
+
 	/**
 	 * 
 	 * @param myagent    reference to the agent we are adding this behaviour to
@@ -68,7 +74,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 		this.list_agentNames = agentNames;
 		this.list_map = new ArrayList<>();
 		this.agentsEnExploration = new ArrayList<>(agentNames); // Initialisation avec tous les agents
-		this.agentsEnExploration.add(myagent.getLocalName());
+		this.listeTresors = new ArrayList<>();
+		this.derniereMajTresors = LocalDateTime.now();
 	}
 
 	@Override
@@ -117,7 +124,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 					for (Couple<String, MapRepresentation> coupleAgentMap : this.list_map) {
 						// Ajouter le noeud accessible à la carte de l'agent ainsi que l'arc entre le
 						// noeud actuel et le noeud accessible
-						coupleAgentMap.getRight().addNode(accessibleNode.getLocationId(), MapAttribute.open);
+						coupleAgentMap.getRight().addNode(accessibleNode.getLocationId(), MapAttribute.shared);
 						coupleAgentMap.getRight().addEdge(myPosition.getLocationId(), accessibleNode.getLocationId());
 					}
 					if (nextNodeId == null && isNewNode)
@@ -132,7 +139,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				// Si tous les agents ont fini, on met fin au comportement
 				finished = true;
 				System.out.println(this.myAgent.getLocalName()
-						+ " - A fini d'explorer et je sais que les autres agents ont fini.");
+						+ " - A fini d'explorer et sait que les autres agents ont fini.");
 				// On envoie un message de fin d'exploration à tous les agents
 				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 				msg.setProtocol("END");
@@ -150,8 +157,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				if (!this.myMap.hasOpenNode() && !agentsEnExploration.isEmpty()) {
 					// On continue à attendre que les autres agents
 					// finissent en explorant les alentours
-					System.out.println(
-							this.myAgent.getLocalName() + " - a terminé mais est en attente des autres agents.");
 					// On envoie un message de fin d'exploration à tous les agents
 					ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 					msg.setProtocol("END");
@@ -198,10 +203,22 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 						Couple<Location, List<Couple<Observation, String>>> couple = iter1.next();
 						List<Couple<Observation, String>> observations = couple.getRight(); // Récupérer la liste des
 																							// agents proches
+
 						// Si on a des observations et que le noeud n'est pas notre position actuelle
-						if (!observations.isEmpty() && !couple.getLeft().equals(myPosition)) {
+						if (!observations.isEmpty()) {
 							for (Couple<Observation, String> obs : observations) {
-								if (obs.getLeft().getName().equals("AgentName")) {
+								if (obs.getLeft().getName().equals("Gold")
+										|| obs.getLeft().getName().equals("Diamond")) {
+									TresorInfo tresor = new TresorInfo(obs.getLeft().getName(), obs.getRight());
+									if (!this.listeTresors.contains(tresor)) {
+										this.listeTresors.add(tresor);
+										System.out.println(this.myAgent.getLocalName() + " a trouvé un trésor : "
+												+ obs.getLeft().getName() + " à " + obs.getRight());
+									}
+									this.derniereMajTresors = LocalDateTime.now();
+								}
+								if (obs.getLeft().getName().equals("AgentName")
+										&& !obs.getRight().equals(this.myAgent.getLocalName())) {
 									agentNames.add(obs.getRight()); // Récupérer la valeur String et l'ajouter à
 																	// agentNames
 									this.myAgent
@@ -210,6 +227,13 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 									this.myAgent
 											.addBehaviour(
 													new ReceiveMapBehaviour(this.myAgent, this.myMap, agentNames));
+									this.myAgent
+											.addBehaviour(new SendTresorBehaviour((AbstractDedaleAgent) this.myAgent,
+													this.listeTresors,
+													this.derniereMajTresors, obs.getRight()));
+									this.myAgent.addBehaviour(new ReceiveTresorBehaviour(this.listeTresors,
+											this.derniereMajTresors));
+
 									MessageTemplate msgTemplate = MessageTemplate.and(
 											MessageTemplate.MatchProtocol("ACK"),
 											MessageTemplate.MatchPerformative(ACLMessage.INFORM));
@@ -221,9 +245,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 										// Supprimer la carte de l'agent qui a envoyé un ACK
 										this.list_map
 												.removeIf(coupleAgentMap -> coupleAgentMap.getLeft().equals(sender));
-										for (Couple<String, MapRepresentation> coupleAgentMap : this.list_map) {
-											System.out.println(this.list_map.getFirst());
-										}
 										this.list_map.add(
 												new Couple<String, MapRepresentation>(sender, new MapRepresentation()));
 
@@ -236,7 +257,31 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
 					}
 				}
-				((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
+				boolean moved = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
+
+				if (!moved) {
+					System.out.println(this.myAgent.getLocalName() + " - Collision détectée vers " + nextNodeId);
+
+					// Attendre un temps aléatoire pour désynchroniser les agents
+					int waitTime = 500 + (int) (Math.random() * 1000);
+					try {
+						this.myAgent.doWait(waitTime);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
+					// Essayer un autre nœud voisin (exploration locale)
+					for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
+						String alternative = couple.getLeft().getLocationId();
+						if (!alternative.equals(myPosition.getLocationId()) && !alternative.equals(nextNodeId)) {
+							System.out.println(
+									this.myAgent.getLocalName() + " - Tentative d'alternative vers " + alternative);
+							boolean tryAlt = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(alternative));
+							if (tryAlt)
+								break;
+						}
+					}
+				}
 			}
 
 		}
