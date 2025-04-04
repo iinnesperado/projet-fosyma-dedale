@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import dataStructures.serializableGraph.SerializableSimpleGraph;
 import dataStructures.tuple.Couple;
@@ -55,16 +56,11 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
 	private List<Couple<String, MapRepresentation>> list_map;
 
-	private List<String> agentsEnAttenteACK = new ArrayList<>();
-
 	private List<String> agentsEnExploration;
 
-<<<<<<< HEAD
 	private List<TresorInfo> listeTresors = new ArrayList<>();
 	private LocalDateTime derniereMajTresors;
 
-=======
->>>>>>> refs/remotes/origin/master
 	/**
 	 * 
 	 * @param myagent    reference to the agent we are adding this behaviour to
@@ -77,12 +73,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 		this.list_agentNames = agentNames;
 		this.list_map = new ArrayList<>();
 		this.agentsEnExploration = new ArrayList<>(agentNames); // Initialisation avec tous les agents
-<<<<<<< HEAD
 		this.listeTresors = new ArrayList<>();
 		this.derniereMajTresors = LocalDateTime.now();
-=======
-		this.agentsEnExploration.add(myagent.getLocalName());
->>>>>>> refs/remotes/origin/master
 	}
 
 	@Override
@@ -102,6 +94,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 			// List of observable from the agent's current position
 			List<Couple<Location, List<Couple<Observation, String>>>> lobs = ((AbstractDedaleAgent) this.myAgent)
 					.observe();// myPosition
+
+			// System.out.println(lobs);
 
 			/**
 			 * Just added here to let you see what the agent is doing, otherwise he will be
@@ -131,11 +125,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 					for (Couple<String, MapRepresentation> coupleAgentMap : this.list_map) {
 						// Ajouter le noeud accessible à la carte de l'agent ainsi que l'arc entre le
 						// noeud actuel et le noeud accessible
-<<<<<<< HEAD
 						coupleAgentMap.getRight().addNode(accessibleNode.getLocationId(), MapAttribute.shared);
-=======
-						coupleAgentMap.getRight().addNode(accessibleNode.getLocationId(), MapAttribute.open);
->>>>>>> refs/remotes/origin/master
 						coupleAgentMap.getRight().addEdge(myPosition.getLocationId(), accessibleNode.getLocationId());
 					}
 					if (nextNodeId == null && isNewNode)
@@ -150,11 +140,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				// Si tous les agents ont fini, on met fin au comportement
 				finished = true;
 				System.out.println(this.myAgent.getLocalName()
-<<<<<<< HEAD
 						+ " - A fini d'explorer et sait que les autres agents ont fini.");
-=======
-						+ " - A fini d'explorer et je sais que les autres agents ont fini.");
->>>>>>> refs/remotes/origin/master
 				// On envoie un message de fin d'exploration à tous les agents
 				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 				msg.setProtocol("END");
@@ -172,18 +158,12 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				if (!this.myMap.hasOpenNode() && !agentsEnExploration.isEmpty()) {
 					// On continue à attendre que les autres agents
 					// finissent en explorant les alentours
-<<<<<<< HEAD
-=======
-					System.out.println(
-							this.myAgent.getLocalName() + " - a terminé mais est en attente des autres agents.");
->>>>>>> refs/remotes/origin/master
 					// On envoie un message de fin d'exploration à tous les agents
 					ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 					msg.setProtocol("END");
 					msg.setSender(this.myAgent.getAID());
 					for (String agent : this.list_agentNames) {
 						msg.addReceiver(new AID(agent, AID.ISLOCALNAME));
-<<<<<<< HEAD
 					}
 					this.myAgent.send(msg);
 				}
@@ -204,12 +184,11 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 							System.out.println(this.myAgent.getLocalName() + " a reçu un END de " + sender);
 							agentsEnExploration.remove(sender);
 						}
-						// On continue d'explorer les noeuds alentours
-						Iterator<Couple<Location, List<Couple<Observation, String>>>> iter_noeud_voisin = lobs
-								.iterator();
-						if (iter_noeud_voisin.hasNext()) {
-							nextNodeId = iter_noeud_voisin.next().getLeft().getLocationId();
-						}
+						// Random move from the current position
+						Random r = new Random();
+						int randomIndex = r.nextInt(lobs.size());
+						Couple<Location, List<Couple<Observation, String>>> randomNode = lobs.get(randomIndex);
+						nextNodeId = randomNode.getLeft().getLocationId();
 					} else {
 						// si l'agent n'a pas terminé, on continue l'exploration
 						nextNodeId = this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId()).get(0);
@@ -233,8 +212,10 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 									TresorInfo tresor = new TresorInfo(obs.getLeft().getName(), obs.getRight());
 									if (!this.listeTresors.contains(tresor)) {
 										this.listeTresors.add(tresor);
-										System.out.println(this.myAgent.getLocalName() + " a trouvé un trésor : "
-												+ obs.getLeft().getName() + " à " + obs.getRight());
+										System.out.println(this.myAgent.getLocalName() + " a trouvé "
+												+ obs.getRight() + " "
+												+ obs.getLeft().getName() + " en position "
+												+ myPosition.getLocationId());
 									}
 									this.derniereMajTresors = LocalDateTime.now();
 								}
@@ -303,87 +284,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 						}
 					}
 				}
-=======
-					}
-					this.myAgent.send(msg);
-				}
-				if (nextNodeId == null) {
-					// si l'agent a terminé mais que d'autres agents sont encore en exploration
-					if (!this.myMap.hasOpenNode() && !agentsEnExploration.isEmpty()) {
-						// On continue à attendre que les autres agents finissent en explorant les
-						// alentours
-						System.out.println(
-								this.myAgent.getLocalName() + " - a terminé mais est en attente des autres agents.");
-						// On attend un message de fin d'exploration
-						MessageTemplate msgTemplate = MessageTemplate.and(
-								MessageTemplate.MatchProtocol("END"),
-								MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-						ACLMessage msgReceived = this.myAgent.blockingReceive(msgTemplate, 5000);
-						if (msgReceived != null) {
-							String sender = msgReceived.getSender().getLocalName();
-							System.out.println(this.myAgent.getLocalName() + " a reçu un END de " + sender);
-							agentsEnExploration.remove(sender);
-						}
-						// On continue d'explorer les noeuds alentours
-						Iterator<Couple<Location, List<Couple<Observation, String>>>> iter_noeud_voisin = lobs
-								.iterator();
-						if (iter_noeud_voisin.hasNext()) {
-							nextNodeId = iter_noeud_voisin.next().getLeft().getLocationId();
-						}
-					} else {
-						// si l'agent n'a pas terminé, on continue l'exploration
-						nextNodeId = this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId()).get(0);
-					}
-
-				}
-				if (lobs != null) {
-					List<String> agentNames = new ArrayList<String>();
-					Iterator<Couple<Location, List<Couple<Observation, String>>>> iter1 = lobs.iterator();
-
-					while (iter1.hasNext()) {
-						Couple<Location, List<Couple<Observation, String>>> couple = iter1.next();
-						List<Couple<Observation, String>> observations = couple.getRight(); // Récupérer la liste des
-																							// agents proches
-						// Si on a des observations et que le noeud n'est pas notre position actuelle
-						if (!observations.isEmpty() && !couple.getLeft().equals(myPosition)) {
-							for (Couple<Observation, String> obs : observations) {
-								if (obs.getLeft().getName().equals("AgentName")) {
-									agentNames.add(obs.getRight()); // Récupérer la valeur String et l'ajouter à
-																	// agentNames
-									this.myAgent
-											.addBehaviour(new SendMapBehaviourOld((AbstractDedaleAgent) this.myAgent,
-													this.myMap, obs.getRight()));
-									this.myAgent
-											.addBehaviour(
-													new ReceiveMapBehaviour(this.myAgent, this.myMap, agentNames));
-									MessageTemplate msgTemplate = MessageTemplate.and(
-											MessageTemplate.MatchProtocol("ACK"),
-											MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-									ACLMessage msgReceived = this.myAgent.blockingReceive(msgTemplate, 5000);
-
-									if (msgReceived != null) {
-										String sender = msgReceived.getSender().getLocalName();
-										System.out.println(this.myAgent.getLocalName() + " a reçu un ACK de " + sender);
-										// Supprimer la carte de l'agent qui a envoyé un ACK
-										this.list_map
-												.removeIf(coupleAgentMap -> coupleAgentMap.getLeft().equals(sender));
-										for (Couple<String, MapRepresentation> coupleAgentMap : this.list_map) {
-											System.out.println(this.list_map.getFirst());
-										}
-										this.list_map.add(
-												new Couple<String, MapRepresentation>(sender, new MapRepresentation()));
-
-									}
-								}
-
-							}
-
-						}
-
-					}
-				}
-				((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
->>>>>>> refs/remotes/origin/master
 			}
 
 		}

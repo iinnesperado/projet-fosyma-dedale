@@ -48,6 +48,9 @@ public class ReceiveTresorBehaviour extends CyclicBehaviour {
                             mesTresors.add(t);
                             count++;
                         }
+                        // print toute la liste de trésors
+                        System.out.println(myAgent.getLocalName() + " a reçu un trésor : " + t);
+                        System.out.println("Liste de trésors : " + mesTresors);
                     }
                     derniereMajLocale = dateRecu;
                     System.out.println(myAgent.getLocalName() + " a mis à jour sa liste de trésors avec " + count
