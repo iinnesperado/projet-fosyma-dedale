@@ -26,6 +26,8 @@ import jade.lang.acl.UnreadableException;
 import jade.core.AID;
 import java.util.Random;
 
+import org.apache.commons.math3.analysis.function.Abs;
+
 /**
  * <pre>
  * This behaviour allows an agent to explore the environment and learn the associated topological map.
@@ -41,7 +43,7 @@ import java.util.Random;
  * @author hc
  *
  */
-public class CollectCoopBehaviour extends SimpleBehaviour {
+public class ExploCollectBehaviour extends SimpleBehaviour {
 
     private static final long serialVersionUID = 8567689731496787661L;
 
@@ -56,12 +58,9 @@ public class CollectCoopBehaviour extends SimpleBehaviour {
 
     private List<Couple<String, MapRepresentation>> list_map;
 
-    private List<String> agentsEnAttenteACK = new ArrayList<>();
-
     private List<String> agentsEnExploration;
 
     private List<TresorInfo> listeTresors = new ArrayList<>();
-
     private LocalDateTime derniereMajTresors;
 
     /**
@@ -70,19 +69,25 @@ public class CollectCoopBehaviour extends SimpleBehaviour {
      * @param myMap      known map of the world the agent is living in
      * @param agentNames name of the agents to share the map with
      */
-    public CollectCoopBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap, List<String> agentNames,
-            List<TresorInfo> listeTresors) {
+    public ExploCollectBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap, List<String> agentNames) {
         super(myagent);
         this.myMap = myMap;
         this.list_agentNames = agentNames;
         this.list_map = new ArrayList<>();
         this.listeTresors = new ArrayList<>();
-        this.listeTresors = listeTresors;
         this.derniereMajTresors = LocalDateTime.now();
     }
 
     @Override
     public void action() {
+
+        if (this.myMap == null) {
+            this.myMap = new MapRepresentation(this.myAgent.getLocalName());
+            for (String agent : this.list_agentNames) {
+                this.list_map.add(new Couple<String, MapRepresentation>(agent,
+                        new MapRepresentation(this.myAgent.getLocalName())));
+            }
+        }
 
         // 0) Retrieve the current position
         Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
@@ -102,17 +107,65 @@ public class CollectCoopBehaviour extends SimpleBehaviour {
                 e.printStackTrace();
             }
 
+            // 1) remove the current node from openlist and add it to closedNodes.
+            this.myMap.addNode(myPosition.getLocationId(), MapAttribute.closed);
+            for (Couple<String, MapRepresentation> coupleAgentMap : this.list_map) {
+                coupleAgentMap.getRight().addNode(myPosition.getLocationId(), MapAttribute.closed);
+            }
+
             // 2) get the surrounding nodes and, if not in closedNodes, add them to open
             // nodes.
             String nextNodeId = null;
             Iterator<Couple<Location, List<Couple<Observation, String>>>> iter = lobs.iterator();
             while (iter.hasNext()) {
                 Location accessibleNode = iter.next().getLeft(); // on récupère le noeud accessible
-                if (nextNodeId == null)
-                    nextNodeId = accessibleNode.getLocationId();
-
+                boolean isNewNode = this.myMap.addNewNode(accessibleNode.getLocationId());
+                if (myPosition.getLocationId() != accessibleNode.getLocationId()) {
+                    this.myMap.addEdge(myPosition.getLocationId(), accessibleNode.getLocationId());
+                    for (Couple<String, MapRepresentation> coupleAgentMap : this.list_map) {
+                        // Ajouter le noeud accessible à la carte de l'agent ainsi que l'arc entre le
+                        // noeud actuel et le noeud accessible
+                        coupleAgentMap.getRight().addNode(accessibleNode.getLocationId(), MapAttribute.shared);
+                        coupleAgentMap.getRight().addEdge(myPosition.getLocationId(), accessibleNode.getLocationId());
+                    }
+                    if (nextNodeId == null && isNewNode)
+                        nextNodeId = accessibleNode.getLocationId();
+                }
             }
 
+            // 3) while openNodes is not empty, continues.
+            // s'il n'y a plus de noeud ouvert et que tous les agents ont fini, on arrête le
+            // comportement
+            if (!this.myMap.hasOpenNode()) {
+                // Si tous les agents ont fini, on met fin au comportement
+                finished = true;
+                System.out.println(this.myAgent.getLocalName() + " - a terminé l'exploration.");
+                this.myAgent.addBehaviour(
+                        new CollectCoopBehaviour((AbstractDedaleAgent) this.myAgent, myMap, list_agentNames,
+                                listeTresors));
+            } else {
+                if (nextNodeId == null) {
+                    // si l'agent a terminé mais que d'autres agents sont encore en exploration
+                    if (!this.myMap.hasOpenNode() && !agentsEnExploration.isEmpty()) {
+                        // On continue à attendre que les autres agents finissent en explorant les
+                        // alentours
+                        System.out.println(
+                                this.myAgent.getLocalName() + " - a terminé mais est en attente des autres agents.");
+                        // On attend un message de fin d'exploration
+                        MessageTemplate msgTemplate = MessageTemplate.and(
+                                MessageTemplate.MatchProtocol("END"),
+                                MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+                        ACLMessage msgReceived = this.myAgent.blockingReceive(msgTemplate, 5000);
+                        if (msgReceived != null) {
+                            String sender = msgReceived.getSender().getLocalName();
+                            System.out.println(this.myAgent.getLocalName() + " a reçu un END de " + sender);
+                            agentsEnExploration.remove(sender);
+                        }
+                    }
+                    nextNodeId = this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId()).get(0);
+                }
+
+            }
             if (lobs != null) {
                 List<String> agentNames = new ArrayList<String>();
                 Iterator<Couple<Location, List<Couple<Observation, String>>>> iter1 = lobs.iterator();
@@ -140,11 +193,34 @@ public class CollectCoopBehaviour extends SimpleBehaviour {
                                 agentNames.add(obs.getRight()); // Récupérer la valeur String et l'ajouter à
                                                                 // agentNames
                                 this.myAgent
+                                        .addBehaviour(new SendMapBehaviourOld((AbstractDedaleAgent) this.myAgent,
+                                                this.myMap, obs.getRight()));
+                                this.myAgent
+                                        .addBehaviour(
+                                                new ReceiveMapBehaviour(this.myAgent, this.myMap, agentNames));
+                                this.myAgent
                                         .addBehaviour(new SendTresorBehaviour((AbstractDedaleAgent) this.myAgent,
                                                 this.listeTresors,
                                                 this.derniereMajTresors, obs.getRight()));
                                 this.myAgent.addBehaviour(new ReceiveTresorBehaviour(this.listeTresors,
                                         this.derniereMajTresors));
+
+                                MessageTemplate msgTemplate = MessageTemplate.and(
+                                        MessageTemplate.MatchProtocol("ACK"),
+                                        MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+                                ACLMessage msgReceived = this.myAgent.blockingReceive(msgTemplate, 5000);
+
+                                if (msgReceived != null) {
+                                    String sender = msgReceived.getSender().getLocalName();
+                                    System.out.println(this.myAgent.getLocalName() + " a reçu un ACK de " + sender);
+                                    // Supprimer la carte de l'agent qui a envoyé un ACK
+                                    this.list_map
+                                            .removeIf(coupleAgentMap -> coupleAgentMap.getLeft().equals(sender));
+                                    this.list_map.add(
+                                            new Couple<String, MapRepresentation>(sender,
+                                                    new MapRepresentation(sender)));
+
+                                }
                             }
 
                         }
@@ -179,11 +255,12 @@ public class CollectCoopBehaviour extends SimpleBehaviour {
                 }
             }
         }
+
     }
 
     @Override
     public boolean done() {
-        return this.finished;
+        return finished;
     }
 
 }

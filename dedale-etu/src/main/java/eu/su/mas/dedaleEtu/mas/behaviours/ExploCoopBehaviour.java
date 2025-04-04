@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 
 import dataStructures.serializableGraph.SerializableSimpleGraph;
 import dataStructures.tuple.Couple;
@@ -25,6 +24,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import jade.core.AID;
+import java.util.Random;
 
 /**
  * <pre>
@@ -81,9 +81,10 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 	public void action() {
 
 		if (this.myMap == null) {
-			this.myMap = new MapRepresentation();
+			this.myMap = new MapRepresentation(this.myAgent.getLocalName());
 			for (String agent : this.list_agentNames) {
-				this.list_map.add(new Couple<String, MapRepresentation>(agent, new MapRepresentation()));
+				this.list_map.add(new Couple<String, MapRepresentation>(agent,
+						new MapRepresentation(this.myAgent.getLocalName())));
 			}
 		}
 
@@ -94,8 +95,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 			// List of observable from the agent's current position
 			List<Couple<Location, List<Couple<Observation, String>>>> lobs = ((AbstractDedaleAgent) this.myAgent)
 					.observe();// myPosition
-
-			// System.out.println(lobs);
 
 			/**
 			 * Just added here to let you see what the agent is doing, otherwise he will be
@@ -212,10 +211,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 									TresorInfo tresor = new TresorInfo(obs.getLeft().getName(), obs.getRight());
 									if (!this.listeTresors.contains(tresor)) {
 										this.listeTresors.add(tresor);
-										System.out.println(this.myAgent.getLocalName() + " a trouvé "
-												+ obs.getRight() + " "
-												+ obs.getLeft().getName() + " en position "
-												+ myPosition.getLocationId());
+										System.out.println(this.myAgent.getLocalName() + " a trouvé un trésor : "
+												+ obs.getLeft().getName() + " à " + obs.getRight());
 									}
 									this.derniereMajTresors = LocalDateTime.now();
 								}
@@ -248,7 +245,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 										this.list_map
 												.removeIf(coupleAgentMap -> coupleAgentMap.getLeft().equals(sender));
 										this.list_map.add(
-												new Couple<String, MapRepresentation>(sender, new MapRepresentation()));
+												new Couple<String, MapRepresentation>(sender,
+														new MapRepresentation(sender)));
 
 									}
 								}
