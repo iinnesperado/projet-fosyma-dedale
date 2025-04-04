@@ -16,7 +16,7 @@ public class Move2TreasureBehaviour extends SimpleBehaviour{
 
     private static final long serialVersionUID = -4182946470338993682L;
     private MapRepresentation myMap;
-    private List<Couple<String, Observation>> treasuresLocation;
+    private List<Couple<String, Observation>> treasuresLocation; // TODO match code to type TresorInfo
     private List<String> myPath; // path to take to the nearest treasure of of the same treasure type as the agent
 
     public Move2TreasureBehaviour(final AbstractDedaleAgent agent, MapRepresentation myMap, List<Couple<String, Observation>> treasuresLocation){

@@ -82,9 +82,9 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 	public void action() {
 
 		if (this.myMap == null) {
-			this.myMap = new MapRepresentation();
+			this.myMap = new MapRepresentation(this.myAgent.getLocalName());
 			for (String agent : this.list_agentNames) {
-				this.list_map.add(new Couple<String, MapRepresentation>(agent, new MapRepresentation()));
+				this.list_map.add(new Couple<String, MapRepresentation>(agent, new MapRepresentation(this.myAgent.getLocalName())));
 			}
 		}
 
@@ -246,7 +246,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 										this.list_map
 												.removeIf(coupleAgentMap -> coupleAgentMap.getLeft().equals(sender));
 										this.list_map.add(
-												new Couple<String, MapRepresentation>(sender, new MapRepresentation()));
+												new Couple<String, MapRepresentation>(sender, new MapRepresentation(sender)));
 
 									}
 								}
