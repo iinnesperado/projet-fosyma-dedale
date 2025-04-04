@@ -24,6 +24,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import jade.core.AID;
+import java.util.Random;
 
 /**
  * <pre>
@@ -54,8 +55,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 	private List<String> list_agentNames;
 
 	private List<Couple<String, MapRepresentation>> list_map;
-
-	private List<String> agentsEnAttenteACK = new ArrayList<>();
 
 	private List<String> agentsEnExploration;
 
@@ -184,12 +183,11 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 							System.out.println(this.myAgent.getLocalName() + " a reçu un END de " + sender);
 							agentsEnExploration.remove(sender);
 						}
-						// On continue d'explorer les noeuds alentours
-						Iterator<Couple<Location, List<Couple<Observation, String>>>> iter_noeud_voisin = lobs
-								.iterator();
-						if (iter_noeud_voisin.hasNext()) {
-							nextNodeId = iter_noeud_voisin.next().getLeft().getLocationId();
-						}
+						// Random move from the current position
+						Random r = new Random();
+						int randomIndex = r.nextInt(lobs.size());
+						Couple<Location, List<Couple<Observation, String>>> randomNode = lobs.get(randomIndex);
+						nextNodeId = randomNode.getLeft().getLocationId();
 					} else {
 						// si l'agent n'a pas terminé, on continue l'exploration
 						nextNodeId = this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId()).get(0);

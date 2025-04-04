@@ -36,7 +36,6 @@ import jade.core.behaviours.FSMBehaviour;
  *
  */
 
-
 public class ExploreCoopAgent extends AbstractDedaleAgent {
 
 	private static final long serialVersionUID = -7969469610241668140L;
