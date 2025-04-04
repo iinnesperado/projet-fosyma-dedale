@@ -382,7 +382,7 @@ public class Principal {
 
 		// 2) Give the name of your agent, MUST be the same as the one given in the
 		// entities file.
-		agentName = "Elsa";
+		agentName = "Tim";
 
 		// 3) If you want to give specific parameters to your agent, add them here
 		Object[] entityParametersExplo1 = { "Tim" };
@@ -402,7 +402,7 @@ public class Principal {
 
 		// 2) Give the name of your agent, MUST be the same as the one given in the
 		// entities file.
-		agentName = "Tim";
+		agentName = "Elsa";
 
 		// 3) If you want to give specific parameters to your agent, add them here
 		Object[] entityParametersExplo2 = { "Elsa" };

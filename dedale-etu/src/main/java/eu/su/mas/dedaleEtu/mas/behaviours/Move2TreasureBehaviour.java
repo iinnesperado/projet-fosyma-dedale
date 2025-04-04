@@ -16,7 +16,7 @@ public class Move2TreasureBehaviour extends SimpleBehaviour{
 
     private static final long serialVersionUID = -4182946470338993682L;
     private MapRepresentation myMap;
-    private List<Couple<String, Observation>> treasuresLocation;
+    private List<Couple<String, Observation>> treasuresLocation; // TODO match code to type TresorInfo
     private List<String> myPath; // path to take to the nearest treasure of of the same treasure type as the agent
 
     public Move2TreasureBehaviour(final AbstractDedaleAgent agent, MapRepresentation myMap, List<Couple<String, Observation>> treasuresLocation){
@@ -31,8 +31,8 @@ public class Move2TreasureBehaviour extends SimpleBehaviour{
         Observation treasureType = ((AbstractDedaleAgent)this.myAgent).getMyTreasureType();
         
         // On donne un trajet au robot à réaliser vers le trésor le plus proche à sa position
-        if (myPath == null) {
-            // TODO check bc one of the cases is that the robot is at the location of the treasure so it can try to open it 
+        if (myPath == null) { //when the agent doesn't have path to go to a treasure
+            // TODO add FoundBehaviour and run the folowwing code when that B is finished
 
 
             for (Couple<String, Observation> location : treasuresLocation) {

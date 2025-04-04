@@ -43,11 +43,10 @@ public class ExploShareMapBehaviour extends SimpleBehaviour {
 
 		// System.out.println("L'action explo ping est exécutée.");
 		// TODO Auto-generated method stub
-		if (this.myMap == null) {
-			this.myMap = new MapRepresentation(this.myAgent.getLocalName());
-			// this.myAgent.addBehaviour(new
-			// ShareMap2Behaviour(this.myAgent,1000,this.myMap,list_agentNames));
-			// this.myAgent.addBehaviour(new ShareMap2Behaviour(this.myMap));
+		if(this.myMap==null) {
+			this.myMap= new MapRepresentation(this.myAgent.getLocalName());
+			//this.myAgent.addBehaviour(new ShareMap2Behaviour(this.myAgent,1000,this.myMap,list_agentNames));
+			//this.myAgent.addBehaviour(new ShareMap2Behaviour(this.myMap));
 		}
 
 		// 0) Retrieve the current position

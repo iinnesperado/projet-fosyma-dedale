@@ -30,8 +30,8 @@ import jade.core.behaviours.FSMBehaviour;
  * It stops when all nodes have been visited.
  * 
  * 
- * </pre>
- * 
+ *  </pre>
+ *  
  * @author hc
  *
  */
@@ -40,67 +40,68 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 
 	private static final long serialVersionUID = -7969469610241668140L;
 	private MapRepresentation myMap;
+	
 
 	/**
 	 * This method is automatically called when "agent".start() is executed.
-	 * Consider that Agent is launched for the first time.
-	 * 1) set the agent attributes
-	 * 2) add the behaviours
-	 * 
+	 * Consider that Agent is launched for the first time. 
+	 * 			1) set the agent attributes 
+	 *	 		2) add the behaviours
+	 *          
 	 */
-	protected void setup() {
+	protected void setup(){
 
 		super.setup();
-
-		// get the parameters added to the agent at creation (if any)
+		
+		//get the parameters added to the agent at creation (if any)
 		final Object[] args = getArguments();
-
-		List<String> list_agentNames = new ArrayList<String>();
-
-		if (args.length == 0) {
+		
+		List<String> list_agentNames=new ArrayList<String>();
+		
+		if(args.length==0){
 			System.err.println("Error while creating the agent, names of agent to contact expected");
 			System.exit(-1);
-		} else {
-			int i = 2;// WARNING YOU SHOULD ALWAYS START AT 2. This will be corrected in the next
-						// release.
-			while (i < args.length) {
-				list_agentNames.add((String) args[i]);
+		}else{
+			int i=2;// WARNING YOU SHOULD ALWAYS START AT 2. This will be corrected in the next release.
+			while (i<args.length) {
+				list_agentNames.add((String)args[i]);
 				i++;
 			}
 		}
-
+		
 		/************************************************
 		 * 
 		 * ADD the behaviours of the Dummy Moving Agent
 		 * 
 		 ************************************************/
-
+		
 		/***
 		 * MANDATORY TO ALLOW YOUR AGENT TO BE DEPLOYED CORRECTLY
 		 */
+		
+		List<Behaviour> lb=new ArrayList<Behaviour>();
+		lb.add(new ExploCoopBehaviour(this, this.myMap,list_agentNames));
+		
+		addBehaviour(new StartMyBehaviours(this,lb));
 
-		List<Behaviour> lb = new ArrayList<Behaviour>();
-		lb.add(new ExploCoopBehaviour(this, this.myMap, list_agentNames));
-
-		addBehaviour(new StartMyBehaviours(this, lb));
-
-		System.out.println("the  agent " + this.getLocalName() + " is started");
+		System.out.println("the  agent "+this.getLocalName()+ " is started");
 
 	}
-
+	
+	
 	/**
 	 * This method is automatically called after doDelete()
 	 */
-	protected void takeDown() {
+	protected void takeDown(){
 		super.takeDown();
 	}
 
-	protected void beforeMove() {
+	protected void beforeMove(){
 		super.beforeMove();
 		System.out.println("I migrate");
 	}
 
-	protected void afterMove() {
+	protected void afterMove(){
 		super.afterMove();
 		System.out.println("I migrated");
 	}
