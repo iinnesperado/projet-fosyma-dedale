@@ -27,8 +27,8 @@ public class ReceiveMapBehaviour extends OneShotBehaviour {
 	 */
 	private MapRepresentation myMap;
 
-	public ReceiveMapBehaviour(final Agent myAgent, MapRepresentation myMap, List<String> agentNames) {
-		super(myAgent);
+	public ReceiveMapBehaviour(AbstractDedaleAgent myagent, MapRepresentation myMap, List<String> agentNames) {
+		super(myagent);
 		this.myMap = myMap;
 		this.list_agentNames = agentNames;
 	}
