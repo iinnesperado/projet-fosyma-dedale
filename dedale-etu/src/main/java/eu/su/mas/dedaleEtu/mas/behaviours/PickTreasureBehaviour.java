@@ -6,12 +6,18 @@ import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
-import jade.core.behaviours.SimpleBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 
-public class PickTreasureBehaviour extends SimpleBehaviour{
+public class PickTreasureBehaviour extends OneShotBehaviour{
 
     private static final long serialVersionUID = 3973250783964285694L;
     private boolean finished = false;
+    private final boolean askHelp;
+
+    public PickTreasureBehaviour(final AbstractDedaleAgent myagent, boolean askHelp){
+        super(myagent);
+        this.askHelp = askHelp;
+    }
 
     @Override
     public void action() {
@@ -28,21 +34,19 @@ public class PickTreasureBehaviour extends SimpleBehaviour{
                 Observation myTreasureType = ((AbstractDedaleAgent)this.myAgent).getMyTreasureType();
                 if (attribute.getLeft() == myTreasureType) {
                     // 3. Open treasure
-                    if (((AbstractDedaleAgent)this.myAgent).openLock(myTreasureType)) { // TODO behaviour for collective lock picking
+                    if (((AbstractDedaleAgent)this.myAgent).openLock(myTreasureType)) {
                         // 4. Pick treasure 
                         int collected = ((AbstractDedaleAgent)this.myAgent).pick(); 
                         System.out.println("Collecté : " + collected + " unités d'or.");
                         //TODO ajout B pour que si la capacité sac est sup 60% de cap total il cherche le silo
+                    } else {
+                        // TODO add behaviour to ask help to other agents
+
                     }
                 }
             }
         }
         finished = true; // Terminer après une collecte
-    }
-
-    @Override
-    public boolean done() {
-        return finished;
     }
     
 }

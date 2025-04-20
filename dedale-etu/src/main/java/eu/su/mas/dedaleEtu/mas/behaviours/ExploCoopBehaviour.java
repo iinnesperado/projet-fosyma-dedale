@@ -225,7 +225,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 													this.myMap, obs.getRight()));
 									this.myAgent
 											.addBehaviour(
-													new ReceiveMapBehaviour(this.myAgent, this.myMap, agentNames));
+													new ReceiveMapBehaviour(((AbstractDedaleAgent)this.myAgent), this.myMap, agentNames));
 									this.myAgent
 											.addBehaviour(new SendTresorBehaviour((AbstractDedaleAgent) this.myAgent,
 													this.listeTresors,
