@@ -256,7 +256,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 									agentNames.add(obs.getRight()); // Récupérer la valeur String et l'ajouter à
 																	// agentNames
 									this.myAgent
-											.addBehaviour(new SendMapBehaviourOld((AbstractDedaleAgent) this.myAgent,
+											.addBehaviour(new SendMapBehaviour((AbstractDedaleAgent) this.myAgent,
 													this.myMap, obs.getRight()));
 									this.myAgent
 											.addBehaviour(
