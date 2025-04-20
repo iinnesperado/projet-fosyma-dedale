@@ -44,7 +44,7 @@ public class SendTresorBehaviour extends OneShotBehaviour {
         try {
             msg.setContentObject(data);
             myAgent.send(msg);
-            System.out.println(myAgent.getLocalName() + " a envoyé ses trésors à " + receiverName);
+            System.out.println(myAgent.getLocalName() + " a envoyé sa liste de trésors à " + receiverName);
         } catch (IOException e) {
             System.err.println("Erreur lors de l'envoi du message de trésors : " + e.getMessage());
         }

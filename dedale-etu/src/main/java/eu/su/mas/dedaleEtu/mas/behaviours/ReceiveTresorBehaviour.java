@@ -8,7 +8,9 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 
+import java.lang.reflect.Array;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -39,6 +41,7 @@ public class ReceiveTresorBehaviour extends CyclicBehaviour {
             try {
                 TresorMessage dataRecu = (TresorMessage) msg.getContentObject();
                 LocalDateTime dateRecu = dataRecu.getDateDerniereMaj();
+                List<TresorInfo> listeMerged = new ArrayList<>();
 
                 if (dateRecu.isAfter(derniereMajLocale)) {
                     List<TresorInfo> listeRecu = dataRecu.getTresors();
@@ -47,9 +50,10 @@ public class ReceiveTresorBehaviour extends CyclicBehaviour {
                         if (!mesTresors.contains(t)) {
                             mesTresors.add(t);
                             count++;
+                            listeMerged.add(t);
                         }
                         // print toute la liste de trésors
-                        System.out.println(myAgent.getLocalName() + " a reçu un trésor : " + t);
+                        System.out.println(myAgent.getLocalName() + " a reçu une liste de trésor : " + listeMerged);
                         System.out.println("Liste de trésors : " + mesTresors);
                     }
                     derniereMajLocale = dateRecu;

@@ -84,7 +84,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 			this.myMap = new MapRepresentation(this.myAgent.getLocalName());
 			// this.myMap.openGui4();
 			for (String agent : this.list_agentNames) {
-				this.list_map.add(new Couple<String, MapRepresentation>(agent, new MapRepresentation(this.myAgent.getLocalName())));
+				this.list_map.add(new Couple<String, MapRepresentation>(agent,
+						new MapRepresentation(this.myAgent.getLocalName())));
 			}
 		}
 
@@ -177,17 +178,50 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 						MessageTemplate msgTemplate = MessageTemplate.and(
 								MessageTemplate.MatchProtocol("END"),
 								MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-						ACLMessage msgReceived = this.myAgent.blockingReceive(msgTemplate, 5000);
+						ACLMessage msgReceived = this.myAgent.blockingReceive(msgTemplate, 1000); // Temps d'attente
+																									// réduit
 						if (msgReceived != null) {
 							String sender = msgReceived.getSender().getLocalName();
 							System.out.println(this.myAgent.getLocalName() + " a reçu un END de " + sender);
 							agentsEnExploration.remove(sender);
 						}
-						// Random move from the current position
-						Random r = new Random();
-						int randomIndex = r.nextInt(lobs.size());
-						Couple<Location, List<Couple<Observation, String>>> randomNode = lobs.get(randomIndex);
-						nextNodeId = randomNode.getLeft().getLocationId();
+
+						// Au lieu d'un simple déplacement aléatoire, on explore plus efficacement les
+						// alentours
+						// en sélectionnant le nœud le moins visité récemment parmi les nœuds voisins
+						if (lobs != null && !lobs.isEmpty()) {
+							// On va essayer de visiter les nœuds qu'on n'a pas visités récemment
+							List<String> recentlyVisitedNodes = new ArrayList<>(5); // Garder trace des derniers nœuds
+																					// visités
+
+							// Chercher un nœud non récemment visité
+							Couple<Location, List<Couple<Observation, String>>> bestNode = null;
+							for (Couple<Location, List<Couple<Observation, String>>> node : lobs) {
+								String nodeId = node.getLeft().getLocationId();
+								if (!nodeId.equals(myPosition.getLocationId())
+										&& !recentlyVisitedNodes.contains(nodeId)) {
+									bestNode = node;
+									break;
+								}
+							}
+
+							// Si tous les nœuds ont été récemment visités, on en prend un aléatoirement
+							if (bestNode == null) {
+								Random r = new Random();
+								int randomIndex = r.nextInt(lobs.size());
+								bestNode = lobs.get(randomIndex);
+							}
+
+							nextNodeId = bestNode.getLeft().getLocationId();
+
+							// Mettre à jour les nœuds récemment visités
+							if (!recentlyVisitedNodes.contains(nextNodeId)) {
+								recentlyVisitedNodes.add(nextNodeId);
+								if (recentlyVisitedNodes.size() > 5) {
+									recentlyVisitedNodes.remove(0); // On garde une taille fixe
+								}
+							}
+						}
 					} else {
 						// si l'agent n'a pas terminé, on continue l'exploration
 						nextNodeId = this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId()).get(0);
@@ -211,8 +245,9 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 									TresorInfo tresor = new TresorInfo(obs.getLeft().getName(), obs.getRight());
 									if (!this.listeTresors.contains(tresor)) {
 										this.listeTresors.add(tresor);
-										System.out.println(this.myAgent.getLocalName() + " a trouvé un trésor : "
-												+ obs.getLeft().getName() + " à " + obs.getRight());
+										System.out.println(this.myAgent.getLocalName() + " a trouvé un trésor : " +
+												obs.getRight() + " " + obs.getLeft().getName() + " à la position "
+												+ myPosition.getLocationId());
 									}
 									this.derniereMajTresors = LocalDateTime.now();
 								}
@@ -245,7 +280,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 										this.list_map
 												.removeIf(coupleAgentMap -> coupleAgentMap.getLeft().equals(sender));
 										this.list_map.add(
-												new Couple<String, MapRepresentation>(sender, new MapRepresentation(sender)));
+												new Couple<String, MapRepresentation>(sender,
+														new MapRepresentation(sender)));
 
 									}
 								}
@@ -270,14 +306,29 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 					}
 
 					// Essayer un autre nœud voisin (exploration locale)
+					boolean anySuccess = false;
 					for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
 						String alternative = couple.getLeft().getLocationId();
 						if (!alternative.equals(myPosition.getLocationId()) && !alternative.equals(nextNodeId)) {
 							System.out.println(
 									this.myAgent.getLocalName() + " - Tentative d'alternative vers " + alternative);
 							boolean tryAlt = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(alternative));
-							if (tryAlt)
+							if (tryAlt) {
+								anySuccess = true;
 								break;
+							}
+						}
+					}
+
+					// Si aucune alternative n'a fonctionné
+					if (!anySuccess) {
+						System.out.println(this.myAgent.getLocalName()
+								+ " - Toutes les alternatives ont échoué, attente plus longue");
+						// Attendre plus longtemps avant de réessayer
+						try {
+							this.myAgent.doWait(2000);
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
 					}
 				}
