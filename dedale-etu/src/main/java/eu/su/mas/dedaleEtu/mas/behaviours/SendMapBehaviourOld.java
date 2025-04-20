@@ -29,12 +29,12 @@ public class SendMapBehaviourOld extends OneShotBehaviour{
 
     /**
      * @param myagent reference to the agent we are adding this behaviour to
-     * @param myMap known map of the world the agent is living in
+     * @param myMap2 known map of the world the agent is living in
      * @param agentName name of the agent to share the map with
      */
-    public SendMapBehaviourOld(final AbstractDedaleAgent myagent, MapRepresentation myMap, String agentName) {
+    public SendMapBehaviourOld(final AbstractDedaleAgent myagent, MapRepresentation myMap2, String agentName) {
         super(myagent);
-        this.myMap = myMap;
+        this.myMap = myMap2;
         this.agent = agentName;
     }
 
