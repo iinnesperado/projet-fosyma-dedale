@@ -242,7 +242,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 							for (Couple<Observation, String> obs : observations) {
 								if (obs.getLeft().getName().equals("Gold")
 										|| obs.getLeft().getName().equals("Diamond")) {
-									TresorInfo tresor = new TresorInfo(obs.getLeft().getName(), obs.getRight());
+									TresorInfo tresor = new TresorInfo(obs.getLeft().getName(),
+											myPosition.getLocationId(), Integer.parseInt(obs.getRight()));
 									if (!this.listeTresors.contains(tresor)) {
 										this.listeTresors.add(tresor);
 										System.out.println(this.myAgent.getLocalName() + " a trouvé un trésor : " +

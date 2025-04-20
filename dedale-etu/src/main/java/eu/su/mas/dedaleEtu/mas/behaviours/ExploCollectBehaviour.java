@@ -77,6 +77,16 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
         this.agentsEnExploration = new ArrayList<>(agentNames); // Initialisation avec tous les agents
         this.listeTresors = new ArrayList<>();
         this.derniereMajTresors = LocalDateTime.now();
+        List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace();
+        for (Couple<Observation, Integer> couple : backPack) {
+            if (couple.getLeft().getName().equals("Gold")) {
+                this.placeRestantGold = couple.getRight();
+                System.out.println("Place restante pour l'or : " + this.placeRestantGold);
+            } else if (couple.getLeft().getName().equals("Diamond")) {
+                this.placeRestantDiamond = couple.getRight();
+                System.out.println("Place restante pour le diamant : " + this.placeRestantDiamond);
+            }
+        }
 
     }
 
@@ -115,7 +125,6 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
             for (Couple<String, MapRepresentation> coupleAgentMap : this.list_map) {
                 coupleAgentMap.getRight().addNode(myPosition.getLocationId(), MapAttribute.closed);
             }
-
             // 2) get the surrounding nodes and, if not in closedNodes, add them to open
             // nodes.
             String nextNodeId = null;
@@ -134,6 +143,14 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                     if (nextNodeId == null && isNewNode)
                         nextNodeId = accessibleNode.getLocationId();
                 }
+            }
+            // Si le sac à dos est plein, on ne peut pas ramasser de trésor, on va chercher
+            // l'agent Tanker pour transférer tous les trésors du sac à dos
+            if (this.placeRestantGold == 0 && this.placeRestantDiamond == 0) {
+                // On cherche un agent Tanker
+                // Behaviour qui va chercher un agent Tanker
+                // this.myAgent.addBehaviour(new SearchTankerBehaviour(this.myAgent,
+                // this.list_agentNames));
             }
 
             // 3) while openNodes is not empty, continues.
@@ -242,15 +259,56 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
 
                         // Si on a des observations et que le noeud n'est pas notre position actuelle
                         if (!observations.isEmpty()) {
+                            System.out.println(this.myAgent.getLocalName() + " - Observations : " + observations);
                             for (Couple<Observation, String> obs : observations) {
                                 if (obs.getLeft().getName().equals("Gold")
                                         || obs.getLeft().getName().equals("Diamond")) {
-                                    TresorInfo tresor = new TresorInfo(obs.getLeft().getName(), obs.getRight());
+                                    TresorInfo tresor = new TresorInfo(obs.getLeft().getName(),
+                                            myPosition.getLocationId(),
+                                            Integer.parseInt(obs.getRight()));
+                                    if (obs.getLeft().getName().equals("Gold")) {
+                                        if (this.placeRestantGold != null && this.placeRestantGold > 0) {
+                                            // On peut ramasser de l'or
+                                            Integer quantity = Integer.parseInt(obs.getRight());
+                                            ((AbstractDedaleAgent) this.myAgent).openLock(obs.getLeft());
+                                            int collected = ((AbstractDedaleAgent) this.myAgent).pick();
+                                            System.out.println("Collecté : " + collected + " unités d'or.");
+                                            tresor.setQuantity(quantity - collected);
+                                            this.placeRestantGold -= collected;
+                                        }
+                                    } else if (obs.getLeft().getName().equals("Diamond")) {
+                                        if (this.placeRestantDiamond != null && this.placeRestantDiamond > 0) {
+                                            // On peut ramasser du diamant
+                                            ((AbstractDedaleAgent) this.myAgent).openLock(obs.getLeft());
+                                            int collected = ((AbstractDedaleAgent) this.myAgent).pick();
+                                            System.out.println("Collecté : " + collected + " unités de diamant.");
+                                            tresor.setQuantity(Integer.parseInt(obs.getRight()) - collected);
+                                            this.placeRestantDiamond -= collected;
+                                        }
+                                    }
+                                    // On ne peut pas avoir deux différents trésors au même endroit donc si on a
+                                    // déjà un trésor à cette position, on met à jour la quantité du trésor
                                     if (!this.listeTresors.contains(tresor)) {
                                         this.listeTresors.add(tresor);
                                         System.out.println(this.myAgent.getLocalName() + " a trouvé un trésor : " +
                                                 obs.getRight() + " " + obs.getLeft().getName() + " à la position "
                                                 + myPosition.getLocationId());
+                                    } else {
+                                        for (TresorInfo t : this.listeTresors) {
+                                            if (t.getPositionId().equals(myPosition.getLocationId())
+                                                    && t.getType().equals(obs.getLeft().getName())) {
+                                                Integer quantityBeforePicking = t.getQuantity();
+                                                t.setQuantity(t.getQuantity() + Integer.parseInt(obs.getRight()));
+                                                System.out.println(this.myAgent.getLocalName()
+                                                        + " a mis à jour la quantité de trésor : "
+                                                        + obs.getRight() + " " + obs.getLeft().getName()
+                                                        + " à la position "
+                                                        + myPosition.getLocationId());
+                                                System.out.println("Quantité avant ramassage : "
+                                                        + quantityBeforePicking + " - Quantité après ramassage : "
+                                                        + t.getQuantity());
+                                            }
+                                        }
                                     }
                                     this.derniereMajTresors = LocalDateTime.now();
                                 }
@@ -259,7 +317,7 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                                     agentNames.add(obs.getRight()); // Récupérer la valeur String et l'ajouter à
                                                                     // agentNames
                                     this.myAgent
-                                            .addBehaviour(new SendMapBehaviourOld((AbstractDedaleAgent) this.myAgent,
+                                            .addBehaviour(new SendMapBehaviour((AbstractDedaleAgent) this.myAgent,
                                                     this.myMap, obs.getRight()));
                                     this.myAgent
                                             .addBehaviour(

@@ -242,7 +242,9 @@ public class CollectCoopBehaviour extends SimpleBehaviour {
                             for (Couple<Observation, String> obs : observations) {
                                 if (obs.getLeft().getName().equals("Gold")
                                         || obs.getLeft().getName().equals("Diamond")) {
-                                    TresorInfo tresor = new TresorInfo(obs.getLeft().getName(), obs.getRight());
+                                    TresorInfo tresor = new TresorInfo(obs.getLeft().getName(),
+                                            myPosition.getLocationId(),
+                                            Integer.parseInt(obs.getRight()));
                                     if (!this.listeTresors.contains(tresor)) {
                                         this.listeTresors.add(tresor);
                                         System.out.println(this.myAgent.getLocalName() + " a trouvé un trésor : " +
@@ -256,7 +258,7 @@ public class CollectCoopBehaviour extends SimpleBehaviour {
                                     agentNames.add(obs.getRight()); // Récupérer la valeur String et l'ajouter à
                                                                     // agentNames
                                     this.myAgent
-                                            .addBehaviour(new SendMapBehaviourOld((AbstractDedaleAgent) this.myAgent,
+                                            .addBehaviour(new SendMapBehaviour((AbstractDedaleAgent) this.myAgent,
                                                     this.myMap, obs.getRight()));
                                     this.myAgent
                                             .addBehaviour(

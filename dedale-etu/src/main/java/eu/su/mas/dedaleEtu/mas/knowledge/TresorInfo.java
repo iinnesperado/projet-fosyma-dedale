@@ -12,10 +12,13 @@ public class TresorInfo implements Serializable {
 
     private String type; // Exemple: "Gold" ou "Diamond"
     private String positionId; // Exemple: "G5"
+    private Integer quantity; // Quantité d'or ou de diamants
 
-    public TresorInfo(String type, String positionId) {
+    public TresorInfo(String type, String positionId, Integer quantity) {
         this.type = type;
         this.positionId = positionId;
+        this.quantity = quantity;
+
     }
 
     public String getType() {
@@ -34,9 +37,17 @@ public class TresorInfo implements Serializable {
         this.positionId = positionId;
     }
 
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
     @Override
     public String toString() {
-        return "Tresor: " + type + " à " + positionId;
+        return quantity + " " + type + " en position " + positionId;
     }
 
     @Override
@@ -53,4 +64,5 @@ public class TresorInfo implements Serializable {
     public int hashCode() {
         return type.hashCode() + positionId.hashCode();
     }
+
 }
