@@ -3,29 +3,18 @@ package eu.su.mas.dedaleEtu.mas.behaviours;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import dataStructures.serializableGraph.SerializableSimpleGraph;
 import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
-import eu.su.mas.dedale.env.gs.GsLocation;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
-import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
-import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.TresorInfo;
-import eu.su.mas.dedaleEtu.mas.knowledge.TresorMessage;
 
-import jade.core.behaviours.SimpleBehaviour;
 import jade.core.behaviours.TickerBehaviour;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
-import jade.lang.acl.UnreadableException;
-import jade.core.AID;
 import java.util.Random;
 
 /**
@@ -46,8 +35,6 @@ import java.util.Random;
 public class PostExplorationBehaviour extends TickerBehaviour {
 
     private static final long serialVersionUID = 8567689731496787661L;
-
-    private boolean finished = false;
 
     /**
      * Current knowledge of the agent regarding the environment
@@ -103,7 +90,7 @@ public class PostExplorationBehaviour extends TickerBehaviour {
                 switch (o.getLeft()) {
                     case DIAMOND:
                     case GOLD:
-                        TresorInfo tresor = new TresorInfo(o.getLeft().getName(), myPosition.getLocationId(),
+                        TresorInfo tresor = new TresorInfo(o.getLeft(), myPosition.getLocationId(),
                                 Integer.parseInt(o.getRight()));
                         if (!this.listeTresors.contains(tresor)) {
                             this.listeTresors.add(tresor);

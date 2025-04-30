@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import dataStructures.serializableGraph.SerializableSimpleGraph;
 import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
@@ -15,16 +14,11 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
-import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.TresorInfo;
-import eu.su.mas.dedaleEtu.mas.knowledge.TresorMessage;
 
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.lang.acl.UnreadableException;
-import jade.core.AID;
-import java.util.Random;
 
 /**
  * <pre>
@@ -56,12 +50,11 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
 
     private List<Couple<String, MapRepresentation>> list_map;
 
-    private List<String> agentsEnExploration;
-
     private List<TresorInfo> listeTresors = new ArrayList<>();
     private LocalDateTime derniereMajTresors;
     private Integer placeRestantDiamond;
     private Integer placeRestantGold;
+    private Location tankerPosition;
 
     /**
      * 
@@ -74,7 +67,6 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
         this.myMap = myMap;
         this.list_agentNames = agentNames;
         this.list_map = new ArrayList<>();
-        this.agentsEnExploration = new ArrayList<>(agentNames); // Initialisation avec tous les agents
         this.listeTresors = new ArrayList<>();
         this.derniereMajTresors = LocalDateTime.now();
         List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace();
@@ -87,7 +79,6 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                 System.out.println("Place restante pour le diamant : " + this.placeRestantDiamond);
             }
         }
-
     }
 
     @Override
@@ -156,97 +147,18 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
             // 3) while openNodes is not empty, continues.
             // s'il n'y a plus de noeud ouvert et que tous les agents ont fini, on arrête le
             // comportement
-            if (!this.myMap.hasOpenNode() && agentsEnExploration.isEmpty()) {
-                // Si tous les agents ont fini, on met fin au comportement
+            if (!this.myMap.hasOpenNode()) {
+                System.out.println(this.myAgent.getLocalName() + " - Tous les noeuds ont été visités.");
+                System.out.println("----------------------------FIN DE L'EXPLORATION----------------------------");
+                myAgent.addBehaviour(new RandomWalkBehaviour((AbstractDedaleAgent) this.myAgent));
                 finished = true;
-                System.out.println(this.myAgent.getLocalName()
-                        + " - A fini d'explorer et sait que les autres agents ont fini.");
-                // On envoie un message de fin d'exploration à tous les agents
-                ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                msg.setProtocol("END");
-                msg.setSender(this.myAgent.getAID());
-                for (String agent : this.list_agentNames) {
-                    msg.addReceiver(new AID(agent, AID.ISLOCALNAME));
-                }
-                this.myAgent.send(msg);
             } else {
                 // 4) select next move.
                 // 4.1 If there exist one open node directly reachable, go for it,
                 // otherwise choose one from the openNode list, compute the shortestPath and go
                 // for it
-
-                if (!this.myMap.hasOpenNode() && !agentsEnExploration.isEmpty()) {
-                    // On continue à attendre que les autres agents
-                    // finissent en explorant les alentours
-                    // On envoie un message de fin d'exploration à tous les agents
-                    ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                    msg.setProtocol("END");
-                    msg.setSender(this.myAgent.getAID());
-                    for (String agent : this.list_agentNames) {
-                        msg.addReceiver(new AID(agent, AID.ISLOCALNAME));
-                    }
-                    this.myAgent.send(msg);
-                }
                 if (nextNodeId == null) {
-                    // si l'agent a terminé mais que d'autres agents sont encore en exploration
-                    if (!this.myMap.hasOpenNode() && !agentsEnExploration.isEmpty()) {
-                        // On continue à attendre que les autres agents finissent en explorant les
-                        // alentours
-                        System.out.println(
-                                this.myAgent.getLocalName() + " - a terminé mais est en attente des autres agents.");
-                        // On attend un message de fin d'exploration
-                        MessageTemplate msgTemplate = MessageTemplate.and(
-                                MessageTemplate.MatchProtocol("END"),
-                                MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-                        ACLMessage msgReceived = this.myAgent.blockingReceive(msgTemplate, 1000); // Temps d'attente
-                                                                                                  // réduit
-                        if (msgReceived != null) {
-                            String sender = msgReceived.getSender().getLocalName();
-                            System.out.println(this.myAgent.getLocalName() + " a reçu un END de " + sender);
-                            agentsEnExploration.remove(sender);
-                        }
-
-                        // Au lieu d'un simple déplacement aléatoire, on explore plus efficacement les
-                        // alentours
-                        // en sélectionnant le nœud le moins visité récemment parmi les nœuds voisins
-                        if (lobs != null && !lobs.isEmpty()) {
-                            // On va essayer de visiter les nœuds qu'on n'a pas visités récemment
-                            List<String> recentlyVisitedNodes = new ArrayList<>(5); // Garder trace des derniers nœuds
-                                                                                    // visités
-
-                            // Chercher un nœud non récemment visité
-                            Couple<Location, List<Couple<Observation, String>>> bestNode = null;
-                            for (Couple<Location, List<Couple<Observation, String>>> node : lobs) {
-                                String nodeId = node.getLeft().getLocationId();
-                                if (!nodeId.equals(myPosition.getLocationId())
-                                        && !recentlyVisitedNodes.contains(nodeId)) {
-                                    bestNode = node;
-                                    break;
-                                }
-                            }
-
-                            // Si tous les nœuds ont été récemment visités, on en prend un aléatoirement
-                            if (bestNode == null) {
-                                Random r = new Random();
-                                int randomIndex = r.nextInt(lobs.size());
-                                bestNode = lobs.get(randomIndex);
-                            }
-
-                            nextNodeId = bestNode.getLeft().getLocationId();
-
-                            // Mettre à jour les nœuds récemment visités
-                            if (!recentlyVisitedNodes.contains(nextNodeId)) {
-                                recentlyVisitedNodes.add(nextNodeId);
-                                if (recentlyVisitedNodes.size() > 5) {
-                                    recentlyVisitedNodes.remove(0); // On garde une taille fixe
-                                }
-                            }
-                        }
-                    } else {
-                        // si l'agent n'a pas terminé, on continue l'exploration
-                        nextNodeId = this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId()).get(0);
-                    }
-
+                    nextNodeId = this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId()).get(0);
                 }
                 if (lobs != null) {
                     List<String> agentNames = new ArrayList<String>();
@@ -263,8 +175,7 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                             for (Couple<Observation, String> obs : observations) {
                                 if (obs.getLeft().getName().equals("Gold")
                                         || obs.getLeft().getName().equals("Diamond")) {
-                                    TresorInfo tresor = new TresorInfo(obs.getLeft().getName(),
-                                            myPosition.getLocationId(),
+                                    TresorInfo tresor = new TresorInfo(obs.getLeft(), myPosition.getLocationId(),
                                             Integer.parseInt(obs.getRight()));
                                     if (obs.getLeft().getName().equals("Gold")) {
                                         if (this.placeRestantGold != null && this.placeRestantGold > 0) {

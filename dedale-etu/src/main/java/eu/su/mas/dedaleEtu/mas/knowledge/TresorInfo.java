@@ -2,6 +2,10 @@ package eu.su.mas.dedaleEtu.mas.knowledge;
 
 import java.io.Serializable;
 
+import eu.su.mas.dedale.env.Location;
+import eu.su.mas.dedale.env.Observation;
+import eu.su.mas.dedale.env.gs.GsLocation;
+
 /**
  * Représente un trésor (or ou diamant) avec son type et sa position (id de
  * noeud).
@@ -10,18 +14,18 @@ public class TresorInfo implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private String type; // Exemple: "Gold" ou "Diamond"
+    private Observation type; // Exemple: "Gold" ou "Diamond"
     private String positionId; // Exemple: "G5"
     private Integer quantity; // Quantité d'or ou de diamants
 
-    public TresorInfo(String type, String positionId, Integer quantity) {
+    public TresorInfo(Observation type, String positionId, Integer quantity) {
         this.type = type;
         this.positionId = positionId;
         this.quantity = quantity;
 
     }
 
-    public String getType() {
+    public Observation getType() {
         return type;
     }
 
@@ -29,7 +33,7 @@ public class TresorInfo implements Serializable {
         return positionId;
     }
 
-    public void setType(String type) {
+    public void setType(Observation type) {
         this.type = type;
     }
 
