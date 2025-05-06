@@ -52,7 +52,7 @@ public class ReceiveMapBehaviour extends OneShotBehaviour {
 
 		// Si on reçoit un message PING on répond avec un PONG
 		if (msgReceived != null) {
-			System.out.println(this.myAgent.getName() + " a reçu un ping");
+			System.out.println(this.myAgent.getLocalName() + " a reçu un ping");
 			// ACLMessage pong = new ACLMessage(ACLMessage.INFORM);
 			// pong.setProtocol("PONG");
 			// pong.setSender(this.myAgent.getAID());
