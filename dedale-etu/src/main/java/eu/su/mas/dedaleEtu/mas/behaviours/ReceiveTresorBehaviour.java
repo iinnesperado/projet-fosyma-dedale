@@ -1,8 +1,9 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import eu.su.mas.dedale.env.Location;
+import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
-
+import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -21,7 +22,7 @@ public class ReceiveTresorBehaviour extends CyclicBehaviour {
     private static final long serialVersionUID = 1L;
 
     private final List<Treasure> listeTresors;
-
+    
     public ReceiveTresorBehaviour(List<Treasure> listeTresors) {
         this.listeTresors = listeTresors;
     }

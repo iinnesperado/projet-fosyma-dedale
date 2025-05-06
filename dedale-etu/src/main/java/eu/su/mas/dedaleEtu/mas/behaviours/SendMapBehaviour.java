@@ -38,12 +38,12 @@ public class SendMapBehaviour extends OneShotBehaviour {
     public void action() {
 
         // Création du ping pour vérifier la présence de l'agent cible
-        ACLMessage ping = new ACLMessage(ACLMessage.INFORM);
-        ping.setProtocol("PING");
-        ping.setSender(this.myAgent.getAID());
-        ping.addReceiver(new AID(agent, AID.ISLOCALNAME));
-        ((AbstractDedaleAgent) this.myAgent).sendMessage(ping);
-        System.out.println(this.myAgent.getLocalName() + " a envoyé un PING à " + agent);
+        // ACLMessage ping = new ACLMessage(ACLMessage.INFORM);
+        // ping.setProtocol("PING");
+        // ping.setSender(this.myAgent.getAID());
+        // ping.addReceiver(new AID(agent, AID.ISLOCALNAME));
+        // ((AbstractDedaleAgent) this.myAgent).sendMessage(ping);
+        // System.out.println(this.myAgent.getLocalName() + " a envoyé un PING à " + agent);
 
         // // Attente de réponse PONG
         // MessageTemplate msgTemplate = MessageTemplate.and(

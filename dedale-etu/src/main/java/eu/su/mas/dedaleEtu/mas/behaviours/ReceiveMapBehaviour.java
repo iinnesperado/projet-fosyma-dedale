@@ -7,6 +7,7 @@ import dataStructures.serializableGraph.SerializableSimpleGraph;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -17,22 +18,30 @@ public class ReceiveMapBehaviour extends OneShotBehaviour {
 
 	private static final long serialVersionUID = -1082324081791796312L;
 
-	private List<String> list_agentNames;
-	private boolean finished = false;
+	// private List<String> list_agentNames;
+	// private boolean finished = false;
+	private String agent;
 
 	/**
 	 * Current knowledge of the agent regarding the environment
 	 */
 	private MapRepresentation myMap;
 
-	public ReceiveMapBehaviour(final AbstractDedaleAgent myAgent, MapRepresentation myMap, List<String> agentNames) {
+	public ReceiveMapBehaviour(final AbstractDedaleAgent myAgent, MapRepresentation myMap, String agentName) {
 		super(myAgent);
 		this.myMap = myMap;
-		this.list_agentNames = agentNames;
+		this.agent = agentName;
 	}
 
 	@Override
 	public void action() {
+
+		ACLMessage ping = new ACLMessage(ACLMessage.INFORM);
+        ping.setProtocol("PING");
+        ping.setSender(myAgent.getAID());
+        ping.addReceiver(new AID(agent, AID.ISLOCALNAME));
+        ((AbstractDedaleAgent) myAgent).sendMessage(ping);
+        System.out.println(myAgent.getLocalName() + " a envoyé un PING à " + agent);
 
 		// On s'attend à recevoir un PING
 		// Création du template pour recevoir un message de type PING
@@ -72,7 +81,7 @@ public class ReceiveMapBehaviour extends OneShotBehaviour {
 
 				if (sgreceived != null) {
 					this.myMap.mergeMap(sgreceived);
-					System.out.println(this.myAgent.getName() + " a fusionné la carte de "
+					System.out.println(this.myAgent.getLocalName() + " a fusionné la carte de "
 							+ msgReceived.getSender().getLocalName() + " avec sa carte");
 				}
 
@@ -82,10 +91,10 @@ public class ReceiveMapBehaviour extends OneShotBehaviour {
 				ack.setSender(this.myAgent.getAID());
 				ack.addReceiver(msgReceived.getSender());
 				((AbstractDedaleAgent) this.myAgent).sendMessage(ack);
-				System.out.println(this.myAgent.getName() + " a envoyé un ack");
+				System.out.println(this.myAgent.getLocalName() + " a envoyé un ack");
 			}
 		}
-		finished = true;
+		// finished = true;
 	}
 
 }
