@@ -118,13 +118,13 @@ public class PostExplorationBehaviour extends TickerBehaviour {
                         System.out.println("TRÉSORS ACTUELS: " + this.listeTresors);
 
                     case AGENTNAME:
-                        this.myAgent
-                                .addBehaviour(new SendMapBehaviour((AbstractDedaleAgent) this.myAgent,
-                                        this.myMap, obs.getRight()));
+                        // this.myAgent
+                        //         .addBehaviour(new SendMapBehaviour((AbstractDedaleAgent) this.myAgent,
+                        //                 this.myMap, obs.getRight()));
                         this.myAgent
                                 .addBehaviour(
                                         new ReceiveMapBehaviour((AbstractDedaleAgent) this.myAgent,
-                                                this.myMap, list_agentNames));
+                                                this.myMap, obs.getRight()));
                         this.myAgent
                                 .addBehaviour(new SendTresorBehaviour((AbstractDedaleAgent) this.myAgent,
                                         this.listeTresors, obs.getRight()));
