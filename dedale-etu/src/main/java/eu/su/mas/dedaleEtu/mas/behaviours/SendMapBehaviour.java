@@ -45,13 +45,15 @@ public class SendMapBehaviour extends OneShotBehaviour {
         ((AbstractDedaleAgent) this.myAgent).sendMessage(ping);
         System.out.println(this.myAgent.getLocalName() + " a envoyé un PING à " + agent);
 
-        // Attente de réponse PONG
-        MessageTemplate msgTemplate = MessageTemplate.and(
-                MessageTemplate.MatchProtocol("PONG"),
+        // // Attente de réponse PONG
+        // MessageTemplate msgTemplate = MessageTemplate.and(
+        // MessageTemplate.MatchProtocol("PONG"),
+        // MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+        MessageTemplate msgTemplate = MessageTemplate.and(MessageTemplate.MatchProtocol("PING"),
                 MessageTemplate.MatchPerformative(ACLMessage.INFORM));
         ACLMessage msgReceived = this.myAgent.blockingReceive(msgTemplate, 5000);
         if (msgReceived != null) {
-            System.out.println(this.myAgent.getLocalName() + " a reçu un PONG de " + agent);
+            System.out.println(this.myAgent.getLocalName() + " envoie topologie à " + agent);
 
             // Création du message de partage de carte
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);

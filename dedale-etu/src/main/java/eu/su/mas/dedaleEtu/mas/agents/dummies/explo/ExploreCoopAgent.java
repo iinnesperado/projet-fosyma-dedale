@@ -5,15 +5,10 @@ import java.util.List;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.platformManagment.*;
-import eu.su.mas.dedaleEtu.mas.behaviours.ExploCollectBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploCoopBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.ReceiveMapBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.SayHelloBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.SendMapBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 
 import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.FSMBehaviour;
 
 /**
  * <pre>
@@ -80,7 +75,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		 */
 
 		List<Behaviour> lb = new ArrayList<Behaviour>();
-		lb.add(new ExploCollectBehaviour(this, myMap, list_agentNames));
+		lb.add(new ExploCoopBehaviour(this, myMap, list_agentNames));
 
 		addBehaviour(new StartMyBehaviours(this, lb));
 

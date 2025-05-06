@@ -1,7 +1,7 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
-import eu.su.mas.dedaleEtu.mas.knowledge.TresorInfo;
-import eu.su.mas.dedaleEtu.mas.knowledge.TresorMessage;
+import eu.su.mas.dedale.env.Location;
+import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
 
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -20,16 +20,15 @@ public class ReceiveTresorBehaviour extends CyclicBehaviour {
 
     private static final long serialVersionUID = 1L;
 
-    private final List<TresorInfo> mesTresors;
-    private LocalDateTime derniereMajLocale;
+    private final List<Treasure> listeTresors;
 
-    public ReceiveTresorBehaviour(List<TresorInfo> mesTresors, LocalDateTime derniereMajLocale) {
-        this.mesTresors = mesTresors;
-        this.derniereMajLocale = derniereMajLocale;
+    public ReceiveTresorBehaviour(List<Treasure> listeTresors) {
+        this.listeTresors = listeTresors;
     }
 
     @Override
     public void action() {
+        // On s'attend à recevoir un message de type TRESOR-SHARE
         MessageTemplate mt = MessageTemplate.and(
                 MessageTemplate.MatchProtocol("TRESOR-SHARE"),
                 MessageTemplate.MatchPerformative(ACLMessage.INFORM));
@@ -38,35 +37,64 @@ public class ReceiveTresorBehaviour extends CyclicBehaviour {
 
         if (msg != null) {
             try {
-                TresorMessage dataRecu = (TresorMessage) msg.getContentObject();
-                LocalDateTime dateRecu = dataRecu.getDateDerniereMaj();
-                List<TresorInfo> listeMerged = new ArrayList<>();
+                List<Treasure> tresorsRecus = (List<Treasure>) msg.getContentObject();
+                System.out.println(
+                        myAgent.getLocalName() + " a reçu la liste de trésors de " + msg.getSender().getLocalName());
+                System.out.println("Liste de trésors reçue : " + tresorsRecus);
 
-                if (dateRecu.isAfter(derniereMajLocale)) {
-                    List<TresorInfo> listeRecu = dataRecu.getTresors();
-                    int count = 0;
-                    for (TresorInfo t : listeRecu) {
-                        if (!mesTresors.contains(t)) {
-                            mesTresors.add(t);
-                            count++;
-                            listeMerged.add(t);
+                if (tresorsRecus != null && !tresorsRecus.isEmpty()) {
+                    // Listes temporaires pour les opérations
+                    List<Treasure> tresorsAAjouter = new ArrayList<>();
+                    List<Treasure> tresorsARemplacer = new ArrayList<>();
+
+                    // Traiter chaque trésor reçu
+                    for (Treasure tresorRecu : tresorsRecus) {
+                        boolean tresorTrouve = false;
+
+                        // Vérifier si ce trésor existe déjà dans notre liste
+                        for (Treasure tresorLocal : listeTresors) {
+                            if (tresorRecu.getPosition().equals(tresorLocal.getPosition()) &&
+                                    tresorRecu.getType().equals(tresorLocal.getType())) {
+                                tresorTrouve = true;
+
+                                // Comparer les dates pour voir si on doit remplacer
+                                if (tresorRecu.getRecordTime().isAfter(tresorLocal.getRecordTime())) {
+                                    tresorsARemplacer.add(tresorLocal);
+                                    tresorsAAjouter.add(tresorRecu);
+                                    System.out.println(
+                                            myAgent.getLocalName() + " - Remplacement d'un trésor plus ancien à " +
+                                                    tresorRecu.getPosition());
+                                } else {
+                                    System.out.println(
+                                            myAgent.getLocalName() + " - Trésor ignoré car plus ancien en position " +
+                                                    tresorRecu.getPosition());
+                                }
+                                break; // Sortir de la boucle interne car trésor trouvé
+                            }
                         }
-                        // print toute la liste de trésors
-                        System.out.println(myAgent.getLocalName() + " a reçu une liste de trésor : " + listeMerged);
-                        System.out.println("Liste de trésors : " + mesTresors);
-                    }
-                    derniereMajLocale = dateRecu;
-                    System.out.println(myAgent.getLocalName() + " a mis à jour sa liste de trésors avec " + count
-                            + " nouveaux éléments.");
-                } else {
-                    System.out.println(myAgent.getLocalName() + " a ignoré une liste de trésors obsolète.");
-                }
 
+                        // Si le trésor n'existe pas, l'ajouter
+                        if (!tresorTrouve) {
+                            tresorsAAjouter.add(tresorRecu);
+                            System.out.println(myAgent.getLocalName() + " - Nouveau trésor ajouté à " +
+                                    tresorRecu.getPosition());
+                        }
+                    }
+
+                    // Appliquer les modifications APRÈS l'itération
+                    listeTresors.removeAll(tresorsARemplacer); // Supprimer les trésors à remplacer
+                    listeTresors.addAll(tresorsAAjouter); // Ajouter les nouveaux trésors
+
+                    System.out.println(myAgent.getLocalName() + " - Liste de trésors après fusion: " +
+                            listeTresors.size() + " trésors");
+                }
             } catch (UnreadableException e) {
-                System.err.println("Erreur lors de la lecture du message reçu : " + e.getMessage());
+                System.err.println("Erreur lors de la lecture de l'objet: " + e.getMessage());
+                e.printStackTrace();
             }
         } else {
-            block();
+            block(); // Bloquer jusqu'à ce qu'un message arrive
         }
     }
+
 }

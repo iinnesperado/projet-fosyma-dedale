@@ -1,18 +1,51 @@
 [
   {
     "agentType": "agentCollect",
-    "agentName": "Tim",
+    "agentName": "Agent 5",
     "communicationRange": 3,
     "initialLocation": "free",
     "backPackCapacityGold": 15,
-    "backPackCapacityDiamond": -1,
+    "backPackCapacityDiamond": 5,
     "detectionRadius": 0,
     "strengthExpertise": 1,
-    "lockPickingExpertise": 3
+    "lockPickingExpertise": 1
   },
   {
     "agentType": "agentCollect",
-    "agentName": "Elsa",
+    "agentName": "Agent 6",
+    "communicationRange": 3,
+    "initialLocation": "free",
+    "backPackCapacityGold": 20,
+    "backPackCapacityDiamond": 10,
+    "detectionRadius": 0,
+    "strengthExpertise": 2,
+    "lockPickingExpertise": 1
+  },
+  {
+    "agentType": "agentTanker",
+    "agentName": "Tanker",
+    "communicationRange": 3,
+    "initialLocation": "109",
+    "backPackCapacityGold": 100,
+    "backPackCapacityDiamond": 100,
+    "detectionRadius": 0,
+    "strengthExpertise": 2,
+    "lockPickingExpertise": 1
+  },
+  {
+    "agentType": "agentCollect",
+    "agentName": "Agent 1",
+    "communicationRange": 3,
+    "initialLocation": "free",
+    "backPackCapacityGold": 15,
+    "backPackCapacityDiamond": 50,
+    "detectionRadius": 0,
+    "strengthExpertise": 1,
+    "lockPickingExpertise": 1
+  },
+  {
+    "agentType": "agentCollect",
+    "agentName": "Agent 2",
     "communicationRange": 3,
     "initialLocation": "free",
     "backPackCapacityGold": 20,
@@ -23,13 +56,35 @@
   },
   {
     "agentType": "agentCollect",
-    "agentName": "Félix",
+    "agentName": "Agent 3",
     "communicationRange": 3,
     "initialLocation": "free",
-    "backPackCapacityGold": 100,
-    "backPackCapacityDiamond": 100,
+    "backPackCapacityGold": 15,
+    "backPackCapacityDiamond": -1,
+    "detectionRadius": 0,
+    "strengthExpertise": 1,
+    "lockPickingExpertise": 1
+  },
+  {
+    "agentType": "agentCollect",
+    "agentName": "Agent 4",
+    "communicationRange": 3,
+    "initialLocation": "free",
+    "backPackCapacityGold": 20,
+    "backPackCapacityDiamond": -1,
     "detectionRadius": 0,
     "strengthExpertise": 2,
     "lockPickingExpertise": 1
+  },
+  { 
+  "agentType":"wumpus",
+  "agentName": "Golem",
+  "communicationRange": 3,
+  "initialLocation": "free",
+  "backPackCapacityGold": 100,
+  "backPackCapacityDiamond":-1, 
+  "detectionRadius": 0,
+  "strengthExpertise": 2,
+  "lockPickingExpertise":1
   }
   ]

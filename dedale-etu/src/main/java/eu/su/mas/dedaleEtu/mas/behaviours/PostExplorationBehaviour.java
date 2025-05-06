@@ -1,6 +1,5 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +11,7 @@ import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
-import eu.su.mas.dedaleEtu.mas.knowledge.TresorInfo;
+import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
 
 import jade.core.behaviours.TickerBehaviour;
 import java.util.Random;
@@ -41,8 +40,7 @@ public class PostExplorationBehaviour extends TickerBehaviour {
      */
     private MapRepresentation myMap;
     private List<String> list_agentNames;
-    private List<TresorInfo> listeTresors = new ArrayList<>();
-    private LocalDateTime derniereMajTresors;
+    private List<Treasure> listeTresors = new ArrayList<>();
 
     /**
      * 
@@ -56,7 +54,6 @@ public class PostExplorationBehaviour extends TickerBehaviour {
         this.myMap = myMap;
         this.list_agentNames = agentNames;
         this.listeTresors = new ArrayList<>();
-        this.derniereMajTresors = LocalDateTime.now();
     }
 
     @Override
@@ -64,71 +61,83 @@ public class PostExplorationBehaviour extends TickerBehaviour {
 
         // 0) Retrieve the current position
         Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
-
-        System.out.println(this.myAgent.getLocalName() + " -- myCurrentPosition is: " + myPosition);
         if (myPosition != null) {
             // List of observable from the agent's current position
             List<Couple<Location, List<Couple<Observation, String>>>> lobs = ((AbstractDedaleAgent) this.myAgent)
-                    .observe();// myPosition
-            System.out.println(this.myAgent.getLocalName() + " -- list of observables: " + lobs);
-
-            // Little pause to allow you to follow what is going on
-            try {
-                System.out.println("Press enter in the console to allow the agent " + this.myAgent.getLocalName()
-                        + " to execute its next move");
-                System.in.read();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            // list of observations associated to the currentPosition
+                    .observe();
             List<Couple<Observation, String>> lObservations = lobs.get(0).getRight();
 
             // example related to the use of the backpack for the treasure hunt
-            Boolean b = false;
-            for (Couple<Observation, String> o : lObservations) {
-                switch (o.getLeft()) {
-                    case DIAMOND:
-                    case GOLD:
-                        TresorInfo tresor = new TresorInfo(o.getLeft(), myPosition.getLocationId(),
-                                Integer.parseInt(o.getRight()));
-                        if (!this.listeTresors.contains(tresor)) {
-                            this.listeTresors.add(tresor);
-                            System.out.println(this.myAgent.getLocalName() + " a trouvé un trésor : " +
-                                    o.getRight() + " " + o.getLeft().getName() + " à la position "
-                                    + myPosition.getLocationId());
-                        }
-                        this.derniereMajTresors = LocalDateTime.now();
+            for (Couple<Observation, String> obs : lObservations) {
+                switch (obs.getLeft()) {
+                    case DIAMOND, GOLD:
 
-                        break;
+                        Integer quantity = Integer.parseInt(obs.getRight());
+                        Treasure nouveauTresor = new Treasure(myPosition, obs.getLeft().getName(), quantity,
+                                LocalDateTime.now());
+                        boolean tresorExistant = false;
+                        Treasure tresorARemplacer = null;
+
+                        // Rechercher si le trésor existe déjà à cette position
+                        for (Treasure tresorActuel : listeTresors) {
+                            if (tresorActuel.getPosition().equals(myPosition)) {
+                                tresorExistant = true;
+
+                                // Si même type, mettre à jour quantité
+                                if (tresorActuel.getType().equals(nouveauTresor.getType())) {
+                                    tresorActuel.setQuantity(nouveauTresor.getQuantity());
+                                    tresorActuel.setRecordTime(LocalDateTime.now());
+                                    System.out.println(this.myAgent.getLocalName()
+                                            + " - Mise à jour du trésor: " +
+                                            nouveauTresor.getQuantity() + " " + nouveauTresor.getType() +
+                                            " en position " + myPosition.getLocationId());
+                                } else {
+                                    // Type différent, marquer pour remplacement
+                                    tresorARemplacer = tresorActuel;
+                                }
+                                break;
+                            }
+                        }
+
+                        // Si besoin de remplacer (type différent à la même position)
+                        if (tresorARemplacer != null) {
+                            listeTresors.remove(tresorARemplacer);
+                            listeTresors.add(nouveauTresor);
+                            System.out.println("Remplacement d'un trésor de " + tresorARemplacer.getType() +
+                                    " par " + nouveauTresor.getQuantity() + " " + nouveauTresor.getType() +
+                                    " en position " + myPosition.getLocationId());
+                        }
+                        // Si nouveau trésor
+                        else if (!tresorExistant) {
+                            listeTresors.add(nouveauTresor);
+                            System.out.println(this.myAgent.getLocalName() + " - Nouveau trésor trouvé: " +
+                                    nouveauTresor.getQuantity() + " " + nouveauTresor.getType() +
+                                    " en position " + myPosition.getLocationId());
+                        }
+
+                        System.out.println("TRÉSORS ACTUELS: " + this.listeTresors);
+
                     case AGENTNAME:
-                        this.myAgent.addBehaviour(new SendMapBehaviour((AbstractDedaleAgent) this.myAgent,
-                                this.myMap, o.getRight()));
-                        this.myAgent.addBehaviour(new ReceiveMapBehaviour((AbstractDedaleAgent) this.myAgent,
-                                this.myMap, list_agentNames));
-                        this.myAgent.addBehaviour(new SendTresorBehaviour((AbstractDedaleAgent) this.myAgent,
-                                this.listeTresors, this.derniereMajTresors, o.getRight()));
-                        this.myAgent.addBehaviour(new ReceiveTresorBehaviour(this.listeTresors,
-                                this.derniereMajTresors));
+                        this.myAgent
+                                .addBehaviour(new SendMapBehaviour((AbstractDedaleAgent) this.myAgent,
+                                        this.myMap, obs.getRight()));
+                        this.myAgent
+                                .addBehaviour(
+                                        new ReceiveMapBehaviour((AbstractDedaleAgent) this.myAgent,
+                                                this.myMap, list_agentNames));
+                        this.myAgent
+                                .addBehaviour(new SendTresorBehaviour((AbstractDedaleAgent) this.myAgent,
+                                        this.listeTresors, obs.getRight()));
+                        this.myAgent.addBehaviour(new ReceiveTresorBehaviour(this.listeTresors));
+
                     default:
                         break;
                 }
 
             }
-
-            // If the agent picked (part of) the treasure
-            if (b) {
-                List<Couple<Location, List<Couple<Observation, String>>>> lobs2 = ((AbstractDedaleAgent) this.myAgent)
-                        .observe();// myPosition
-                System.out.println(this.myAgent.getLocalName()
-                        + " - State of the observations after trying to pick something " + lobs2);
-            }
-
             // Random move from the current position
             Random r = new Random();
-            int moveId = 1 + r.nextInt(lobs.size() - 1);// removing the current position from the list of target, not
-                                                        // necessary as to stay is an action but allow quicker random
-                                                        // move
+            int moveId = 1 + r.nextInt(lobs.size() - 1);
 
             // The move action (if any) should be the last action of your behaviour
             ((AbstractDedaleAgent) this.myAgent).moveTo(lobs.get(moveId).getLeft());

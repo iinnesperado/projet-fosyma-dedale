@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.math3.analysis.function.Abs;
+
 import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
@@ -13,12 +15,13 @@ import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
+import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
-import eu.su.mas.dedaleEtu.mas.knowledge.TresorInfo;
 
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import javafx.application.Platform;
 
 /**
  * <pre>
@@ -50,11 +53,10 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
 
     private List<Couple<String, MapRepresentation>> list_map;
 
-    private List<TresorInfo> listeTresors = new ArrayList<>();
-    private LocalDateTime derniereMajTresors;
+    private List<Treasure> listeTresors = new ArrayList<>();
     private Integer placeRestantDiamond;
     private Integer placeRestantGold;
-    private Location tankerPosition;
+    private Location tankerLocation = null;
 
     /**
      * 
@@ -67,8 +69,6 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
         this.myMap = myMap;
         this.list_agentNames = agentNames;
         this.list_map = new ArrayList<>();
-        this.listeTresors = new ArrayList<>();
-        this.derniereMajTresors = LocalDateTime.now();
         List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace();
         for (Couple<Observation, Integer> couple : backPack) {
             if (couple.getLeft().getName().equals("Gold")) {
@@ -86,7 +86,11 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
 
         if (this.myMap == null) {
             this.myMap = new MapRepresentation(this.myAgent.getLocalName());
-            // this.myMap.openGui4();
+            Platform.runLater(() -> {
+                // openGui();
+                this.myMap.openGui4();
+
+            });
             for (String agent : this.list_agentNames) {
                 this.list_map.add(new Couple<String, MapRepresentation>(agent,
                         new MapRepresentation(this.myAgent.getLocalName())));
@@ -137,20 +141,20 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
             }
             // Si le sac à dos est plein, on ne peut pas ramasser de trésor, on va chercher
             // l'agent Tanker pour transférer tous les trésors du sac à dos
-            if (this.placeRestantGold == 0 && this.placeRestantDiamond == 0) {
+            if (this.getPlaceRestantGold() == 0 && this.getPlaceRestantDiamond() == 0) {
                 // On cherche un agent Tanker
                 // Behaviour qui va chercher un agent Tanker
                 // this.myAgent.addBehaviour(new SearchTankerBehaviour(this.myAgent,
                 // this.list_agentNames));
             }
-
             // 3) while openNodes is not empty, continues.
             // s'il n'y a plus de noeud ouvert et que tous les agents ont fini, on arrête le
             // comportement
             if (!this.myMap.hasOpenNode()) {
                 System.out.println(this.myAgent.getLocalName() + " - Tous les noeuds ont été visités.");
-                System.out.println("----------------------------FIN DE L'EXPLORATION----------------------------");
-                myAgent.addBehaviour(new RandomWalkBehaviour((AbstractDedaleAgent) this.myAgent));
+                System.out.println("FIN DE L'EXPLORATION DE " + this.myAgent.getLocalName());
+                myAgent.addBehaviour(new PostCollectBehaviour(
+                        (AbstractDedaleAgent) this.myAgent, this.myMap, this.list_agentNames));
                 finished = true;
             } else {
                 // 4) select next move.
@@ -167,61 +171,95 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                     while (iter1.hasNext()) {
                         Couple<Location, List<Couple<Observation, String>>> couple = iter1.next();
                         List<Couple<Observation, String>> observations = couple.getRight(); // Récupérer la liste des
-                                                                                            // agents proches
-
-                        // Si on a des observations et que le noeud n'est pas notre position actuelle
+                                                                                            // observations
                         if (!observations.isEmpty()) {
                             System.out.println(this.myAgent.getLocalName() + " - Observations : " + observations);
                             for (Couple<Observation, String> obs : observations) {
                                 if (obs.getLeft().getName().equals("Gold")
                                         || obs.getLeft().getName().equals("Diamond")) {
-                                    TresorInfo tresor = new TresorInfo(obs.getLeft(), myPosition.getLocationId(),
-                                            Integer.parseInt(obs.getRight()));
+                                    Integer quantity = Integer.parseInt(obs.getRight());
+                                    Treasure nouveauTresor = new Treasure(myPosition, obs.getLeft().getName(), quantity,
+                                            LocalDateTime.now());
+                                    // Gérer le ramassage
                                     if (obs.getLeft().getName().equals("Gold")) {
                                         if (this.placeRestantGold != null && this.placeRestantGold > 0) {
-                                            // On peut ramasser de l'or
-                                            Integer quantity = Integer.parseInt(obs.getRight());
-                                            ((AbstractDedaleAgent) this.myAgent).openLock(obs.getLeft());
-                                            int collected = ((AbstractDedaleAgent) this.myAgent).pick();
-                                            System.out.println("Collecté : " + collected + " unités d'or.");
-                                            tresor.setQuantity(quantity - collected);
-                                            this.placeRestantGold -= collected;
+                                            if (((AbstractDedaleAgent) this.myAgent)
+                                                    .openLock(obs.getLeft())) {
+
+                                                int collected = ((AbstractDedaleAgent) this.myAgent).pick();
+                                                System.out.println("Collecté : " + collected + " unités d'or.");
+                                                nouveauTresor.setQuantity(quantity - collected);
+                                                this.placeRestantGold -= collected;
+                                            } else {
+                                                System.out.println("Impossible d'ouvrir le coffre contenant l'or.");
+                                                Location positionCoffre = myPosition; // Important de capturer la
+                                                                                      // position actuelle
+                                                this.myAgent.addBehaviour(
+                                                        new BesoinExpertise((AbstractDedaleAgent) this.myAgent,
+                                                                this.myMap, list_agentNames, positionCoffre));
+                                            }
                                         }
                                     } else if (obs.getLeft().getName().equals("Diamond")) {
                                         if (this.placeRestantDiamond != null && this.placeRestantDiamond > 0) {
-                                            // On peut ramasser du diamant
-                                            ((AbstractDedaleAgent) this.myAgent).openLock(obs.getLeft());
-                                            int collected = ((AbstractDedaleAgent) this.myAgent).pick();
-                                            System.out.println("Collecté : " + collected + " unités de diamant.");
-                                            tresor.setQuantity(Integer.parseInt(obs.getRight()) - collected);
-                                            this.placeRestantDiamond -= collected;
-                                        }
-                                    }
-                                    // On ne peut pas avoir deux différents trésors au même endroit donc si on a
-                                    // déjà un trésor à cette position, on met à jour la quantité du trésor
-                                    if (!this.listeTresors.contains(tresor)) {
-                                        this.listeTresors.add(tresor);
-                                        System.out.println(this.myAgent.getLocalName() + " a trouvé un trésor : " +
-                                                obs.getRight() + " " + obs.getLeft().getName() + " à la position "
-                                                + myPosition.getLocationId());
-                                    } else {
-                                        for (TresorInfo t : this.listeTresors) {
-                                            if (t.getPositionId().equals(myPosition.getLocationId())
-                                                    && t.getType().equals(obs.getLeft().getName())) {
-                                                Integer quantityBeforePicking = t.getQuantity();
-                                                t.setQuantity(t.getQuantity() + Integer.parseInt(obs.getRight()));
-                                                System.out.println(this.myAgent.getLocalName()
-                                                        + " a mis à jour la quantité de trésor : "
-                                                        + obs.getRight() + " " + obs.getLeft().getName()
-                                                        + " à la position "
-                                                        + myPosition.getLocationId());
-                                                System.out.println("Quantité avant ramassage : "
-                                                        + quantityBeforePicking + " - Quantité après ramassage : "
-                                                        + t.getQuantity());
+                                            if (((AbstractDedaleAgent) this.myAgent)
+                                                    .openLock(obs.getLeft())) {
+                                                int collected = ((AbstractDedaleAgent) this.myAgent).pick();
+                                                System.out.println("Collecté : " + collected + " unités de diamant.");
+                                                nouveauTresor.setQuantity(quantity - collected);
+                                                this.placeRestantDiamond -= collected;
+                                            } else {
+                                                System.out
+                                                        .println("Impossible d'ouvrir le coffre contenant le diamant.");
+                                                Location positionCoffre = myPosition; // Important de capturer la
+                                                                                      // position actuelle
+                                                this.myAgent.addBehaviour(
+                                                        new BesoinExpertise((AbstractDedaleAgent) this.myAgent,
+                                                                this.myMap, list_agentNames, positionCoffre));
                                             }
                                         }
                                     }
-                                    this.derniereMajTresors = LocalDateTime.now();
+
+                                    boolean tresorExistant = false;
+                                    Treasure tresorARemplacer = null;
+
+                                    // Rechercher si le trésor existe déjà à cette position
+                                    for (Treasure tresorActuel : listeTresors) {
+                                        if (tresorActuel.getPosition().equals(myPosition)) {
+                                            tresorExistant = true;
+
+                                            // Si même type, mettre à jour quantité
+                                            if (tresorActuel.getType().equals(nouveauTresor.getType())) {
+                                                tresorActuel.setQuantity(nouveauTresor.getQuantity());
+                                                tresorActuel.setRecordTime(LocalDateTime.now());
+                                                System.out.println(this.myAgent.getLocalName()
+                                                        + " - Mise à jour du trésor: " +
+                                                        nouveauTresor.getQuantity() + " " + nouveauTresor.getType() +
+                                                        " en position " + myPosition.getLocationId());
+                                            } else {
+                                                // Type différent, marquer pour remplacement
+                                                tresorARemplacer = tresorActuel;
+                                            }
+                                            break;
+                                        }
+                                    }
+
+                                    // Si besoin de remplacer (type différent à la même position)
+                                    if (tresorARemplacer != null) {
+                                        listeTresors.remove(tresorARemplacer);
+                                        listeTresors.add(nouveauTresor);
+                                        System.out.println("Remplacement d'un trésor de " + tresorARemplacer.getType() +
+                                                " par " + nouveauTresor.getQuantity() + " " + nouveauTresor.getType() +
+                                                " en position " + myPosition.getLocationId());
+                                    }
+                                    // Si nouveau trésor
+                                    else if (!tresorExistant) {
+                                        listeTresors.add(nouveauTresor);
+                                        System.out.println(this.myAgent.getLocalName() + " - Nouveau trésor trouvé: " +
+                                                nouveauTresor.getQuantity() + " " + nouveauTresor.getType() +
+                                                " en position  " + myPosition.getLocationId());
+                                    }
+
+                                    System.out.println("TRÉSORS ACTUELS: " + this.listeTresors);
                                 }
                                 if (obs.getLeft().getName().equals("AgentName")
                                         && !obs.getRight().equals(this.myAgent.getLocalName())) {
@@ -232,13 +270,14 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                                                     this.myMap, obs.getRight()));
                                     this.myAgent
                                             .addBehaviour(
-                                                    new ReceiveMapBehaviour(this.myAgent, this.myMap, agentNames));
+                                                    new ReceiveMapBehaviour((AbstractDedaleAgent) this.myAgent,
+                                                            this.myMap, agentNames));
                                     this.myAgent
                                             .addBehaviour(new SendTresorBehaviour((AbstractDedaleAgent) this.myAgent,
-                                                    this.listeTresors,
-                                                    this.derniereMajTresors, obs.getRight()));
-                                    this.myAgent.addBehaviour(new ReceiveTresorBehaviour(this.listeTresors,
-                                            this.derniereMajTresors));
+                                                    this.listeTresors, obs.getRight()));
+                                    this.myAgent.addBehaviour(new ReceiveTresorBehaviour(this.listeTresors));
+                                    this.myAgent.addBehaviour(new OffreExpertise(
+                                            (AbstractDedaleAgent) this.myAgent, this.myMap));
 
                                     MessageTemplate msgTemplate = MessageTemplate.and(
                                             MessageTemplate.MatchProtocol("ACK"),
@@ -264,10 +303,148 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
 
                     }
                 }
+                if (nextNodeId == null) {
+                    // Si aucun nœud ouvert n'est directement accessible, on calcule le chemin le
+                    // plus court
+                    List<String> path = this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId());
+                    if (path != null && !path.isEmpty()) {
+                        nextNodeId = path.get(0); // Premier pas du chemin
+
+                        boolean isAdjacent = false;
+                        for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
+                            if (couple.getLeft().getLocationId().equals(nextNodeId)) {
+                                isAdjacent = true;
+                                break;
+                            }
+                        }
+
+                        if (!isAdjacent) {
+                            System.out.println(this.myAgent.getLocalName() + " - ATTENTION: Le nœud " + nextNodeId +
+                                    " n'est pas adjacent à " + myPosition.getLocationId() +
+                                    ". Recherche d'une alternative...");
+
+                            // Si le nœud n'est pas adjacent, on cherche un nœud adjacent accessible
+                            for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
+                                String candidateId = couple.getLeft().getLocationId();
+                                if (!candidateId.equals(myPosition.getLocationId())) {
+                                    nextNodeId = candidateId;
+                                    System.out.println(
+                                            this.myAgent.getLocalName() + " - Alternative trouvée: " + nextNodeId);
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        System.out.println(
+                                this.myAgent.getLocalName() + " - ERREUR: Aucun chemin trouvé vers un nœud ouvert");
+                        try {
+                            this.myAgent.doWait(5000); // Attendre avant de réessayer
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return; // Sortir de l'action pour réessayer au prochain cycle
+                    }
+                }
+
+                // Vérifier une dernière fois que le nœud cible est bien dans les observations
+                boolean targetIsObservable = false;
+                for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
+                    if (couple.getLeft().getLocationId().equals(nextNodeId)) {
+                        targetIsObservable = true;
+                        break;
+                    }
+                }
+
+                if (!targetIsObservable) {
+                    System.out.println(this.myAgent.getLocalName() + " - ERREUR CRITIQUE: Le nœud cible " + nextNodeId +
+                            " n'est pas observable depuis la position actuelle");
+                    return; // Sortir de l'action pour réessayer au prochain cycle
+                }
+
+                // Maintenant on peut tenter le déplacement
                 boolean moved = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
 
                 if (!moved) {
                     System.out.println(this.myAgent.getLocalName() + " - Collision détectée vers " + nextNodeId);
+
+                    // Vérifier si un Tanker est présent sur le nœud cible
+                    boolean tankerFound = false;
+                    String tankerName = null;
+
+                    // Parcourir les observations pour trouver un éventuel Tanker
+                    for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
+                        if (couple.getLeft().getLocationId().equals(nextNodeId)) {
+                            List<Couple<Observation, String>> observations = couple.getRight();
+                            for (Couple<Observation, String> obs : observations) {
+                                if (obs.getLeft().getName().equals("AgentName")
+                                        && (obs.getRight().contains("Tanker") || obs.getRight().contains("tanker"))) {
+                                    tankerLocation = couple.getLeft();
+                                    tankerFound = true;
+                                    tankerName = obs.getRight();
+                                    break;
+                                }
+                            }
+                            if (tankerFound)
+                                // On lui transmet tout les trésors qu'on a
+                                ((AbstractDedaleAgent) this.myAgent).emptyMyBackPack(tankerName);
+                        }
+                    }
+
+                    if (tankerFound) {
+                        // Un Tanker est sur notre chemin, lui demander de se déplacer
+                        System.out.println(
+                                this.myAgent.getLocalName() + " - Tanker détecté sur " + nextNodeId);
+                        TellTankerToMoveBehaviour tellTankerBehaviour = new TellTankerToMoveBehaviour(
+                                (AbstractDedaleAgent) this.myAgent, tankerName, myPosition.getLocationId());
+                        this.myAgent.addBehaviour(tellTankerBehaviour);
+
+                        // Attendre la réponse du Tanker
+                        MessageTemplate msgTemplate = MessageTemplate.and(
+                                MessageTemplate.MatchProtocol("TANKER-MOVED"),
+                                MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+                        ACLMessage msgReceived = this.myAgent.blockingReceive(msgTemplate, 10000);
+                        if (msgReceived != null) {
+                            System.out.println(this.myAgent.getLocalName() + " - Réponse du Tanker : "
+                                    + msgReceived.getContent());
+                            // Le Tanker a déménagé, on peut continuer
+                            moved = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
+                        } else {
+                            // On choisit un autre nœud voisin
+                            System.out.println(this.myAgent.getLocalName()
+                                    + " - Pas de réponse du Tanker, on essaie un autre nœud voisin");
+                            // Essayer de trouver un autre nœud voisin
+                            boolean foundAlternative = false;
+                            for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
+                                String alternative = couple.getLeft().getLocationId();
+                                if (!alternative.equals(myPosition.getLocationId())
+                                        && !alternative.equals(nextNodeId)) {
+                                    System.out.println(
+                                            this.myAgent.getLocalName() + " - Tentative d'alternative vers "
+                                                    + alternative);
+                                    moved = ((AbstractDedaleAgent) this.myAgent)
+                                            .moveTo(new GsLocation(alternative));
+                                    if (moved) {
+                                        foundAlternative = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!foundAlternative) {
+                                System.out.println(this.myAgent.getLocalName()
+                                        + " - Aucune alternative trouvée, attente prolongée");
+                                // Attendre plus longtemps avant de réessayer
+                                try {
+                                    this.myAgent.doWait(2000);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+
+                    // Si ce n'est pas un Tanker ou si la demande a échoué, continuer avec la
+                    // gestion
+                    // normale des collisions
 
                     // Attendre un temps aléatoire pour désynchroniser les agents
                     int waitTime = 500 + (int) (Math.random() * 1000);
@@ -279,15 +456,19 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
 
                     // Essayer un autre nœud voisin (exploration locale)
                     boolean anySuccess = false;
+                    lobs = ((AbstractDedaleAgent) this.myAgent).observe();
                     for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
-                        String alternative = couple.getLeft().getLocationId();
-                        if (!alternative.equals(myPosition.getLocationId()) && !alternative.equals(nextNodeId)) {
-                            System.out.println(
-                                    this.myAgent.getLocalName() + " - Tentative d'alternative vers " + alternative);
-                            boolean tryAlt = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(alternative));
-                            if (tryAlt) {
+                        if (!couple.getLeft().getLocationId().equals(myPosition.getLocationId())
+                                && !couple.getLeft().getLocationId().equals(nextNodeId)) {
+                            String alternativeNodeId = couple.getLeft().getLocationId();
+
+                            System.out.println(this.myAgent.getLocalName() + " - Tentative d'alternative vers "
+                                    + alternativeNodeId);
+                            moved = ((AbstractDedaleAgent) this.myAgent)
+                                    .moveTo(new GsLocation(alternativeNodeId));
+                            if (moved) {
                                 anySuccess = true;
-                                break;
+                                break; // Sortir de la boucle si le déplacement a réussi
                             }
                         }
                     }
@@ -298,7 +479,7 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                                 + " - Toutes les alternatives ont échoué, attente plus longue");
                         // Attendre plus longtemps avant de réessayer
                         try {
-                            this.myAgent.doWait(2000);
+                            this.myAgent.doWait(5000);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -315,4 +496,69 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
         return finished;
     }
 
+    // public void updateTreasureList(Couple<Observation, String> obs, Location
+    // myPosition) {
+    // if (obs.getLeft().equals(Observation.ANY_TREASURE)) {
+    // if (obs.getRight() != null) {
+    // String type = obs.getLeft().getName();
+    // String positionId = myPosition.getLocationId();
+    // String quantity = obs.getRight();
+    // Treasure tresor = new Treasure(myPosition, type, obs.getRight(),
+    // LocalDateTime.now());
+    // if (listeTresors.contains(tresor)) {
+    // // Si le trésor est déjà dans la liste, ou qu'il y a déjà un trésor à cette
+    // // position, on met à jour la quantité
+    // for (Treasure t : listeTresors) {
+    // if (t.getPositionID().equals(positionId)) { // Vérifier si le trésor est à la
+    // même position
+    // if (t.getType().equals(type)) { // Vérifier si le type est le même
+    // // Le type est le même, on met à jour la quantité
+    // t.setAmount(quantity);
+    // t.setRecordTime(LocalDateTime.now());
+    // System.out.println(this.myAgent.getLocalName() + " a mis à jour le trésor : "
+    // + obs.getRight() + " " + obs.getLeft().getName() + " à la position "
+    // + myPosition.getLocationId());
+    // } else {
+    // // Le type est différent, ça veut dire que le golem a déplacé le trésor
+    // // précédemment à cette position
+    // listeTresors.remove(t);
+    // listeTresors.add(tresor);
+    // System.out.println("Il y avait un trésor de type " + t.getType()
+    // + " à la position " + t.getPositionID() + " qui a été remplacé par "
+    // + obs.getRight() + " " + obs.getLeft().getName() + " à la position "
+    // + myPosition.getLocationId());
+    // }
+    // }
+    // }
+    // } else {
+    // // Sinon, on l'ajoute à la liste
+    // listeTresors.add(tresor);
+    // System.out.println(
+    // this.myAgent.getLocalName() + " a trouvé un nouveau trésor : " +
+    // obs.getRight() + " "
+    // + obs.getLeft().getName() + " à la position " + myPosition.getLocationId());
+    // }
+    // }
+    // }
+    // }
+
+    public Integer getPlaceRestantGold() {
+        List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace();
+        for (Couple<Observation, Integer> couple : backPack) {
+            if (couple.getLeft().getName().equals("Gold")) {
+                return couple.getRight();
+            }
+        }
+        return null;
+    }
+
+    public Integer getPlaceRestantDiamond() {
+        List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace();
+        for (Couple<Observation, Integer> couple : backPack) {
+            if (couple.getLeft().getName().equals("Diamond")) {
+                return couple.getRight();
+            }
+        }
+        return null;
+    }
 }

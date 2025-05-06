@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import dataStructures.serializableGraph.SerializableSimpleGraph;
+import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import jade.core.Agent;
@@ -24,7 +25,7 @@ public class ReceiveMapBehaviour extends OneShotBehaviour {
 	 */
 	private MapRepresentation myMap;
 
-	public ReceiveMapBehaviour(final Agent myAgent, MapRepresentation myMap, List<String> agentNames) {
+	public ReceiveMapBehaviour(final AbstractDedaleAgent myAgent, MapRepresentation myMap, List<String> agentNames) {
 		super(myAgent);
 		this.myMap = myMap;
 		this.list_agentNames = agentNames;
@@ -43,17 +44,17 @@ public class ReceiveMapBehaviour extends OneShotBehaviour {
 		// Si on reçoit un message PING on répond avec un PONG
 		if (msgReceived != null) {
 			System.out.println(this.myAgent.getName() + " a reçu un ping");
-			ACLMessage pong = new ACLMessage(ACLMessage.INFORM);
-			pong.setProtocol("PONG");
-			pong.setSender(this.myAgent.getAID());
-			pong.addReceiver(msgReceived.getSender());
-			try {
-				pong.setContentObject("PONG");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			this.myAgent.send(pong);
-			System.out.println(this.myAgent.getName() + " a envoyé un pong");
+			// ACLMessage pong = new ACLMessage(ACLMessage.INFORM);
+			// pong.setProtocol("PONG");
+			// pong.setSender(this.myAgent.getAID());
+			// pong.addReceiver(msgReceived.getSender());
+			// try {
+			// pong.setContentObject("PONG");
+			// } catch (IOException e) {
+			// e.printStackTrace();
+			// }
+			// this.myAgent.send(pong);
+			// System.out.println(this.myAgent.getName() + " a envoyé un pong");
 
 			// On s'attend à recevoir une map
 			msgTemplate = MessageTemplate.and(
@@ -80,7 +81,7 @@ public class ReceiveMapBehaviour extends OneShotBehaviour {
 				ack.setProtocol("ACK");
 				ack.setSender(this.myAgent.getAID());
 				ack.addReceiver(msgReceived.getSender());
-				this.myAgent.send(ack);
+				((AbstractDedaleAgent) this.myAgent).sendMessage(ack);
 				System.out.println(this.myAgent.getName() + " a envoyé un ack");
 			}
 		}

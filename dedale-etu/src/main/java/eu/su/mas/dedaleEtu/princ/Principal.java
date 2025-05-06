@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import eu.su.mas.dedaleEtu.mas.agents.ExploCollectAgent;
+import eu.su.mas.dedaleEtu.mas.agents.TankerAgent;
 import eu.su.mas.dedaleEtu.mas.agents.dummies.DummyCollectorAgent;
 import eu.su.mas.dedaleEtu.mas.agents.dummies.DummyMovingAgent;
 import eu.su.mas.dedaleEtu.mas.agents.dummies.DummyTankerAgent;
@@ -342,20 +344,20 @@ public class Principal {
 		 * GOLEM
 		 *********/
 		// 1) Get the container where the agent will appear
-		// c = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
-		// //Assert.assertNotNull("This container does not exist",c);
-		//
+		c = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
+		// Assert.assertNotNull("This container does not exist",c);
+
 		// //2) Give the name of your agent, MUST be the same as the one given in the
 		// entities file.
-		// agentName="G1";
+		agentName = "Golem";
 		//
 		// //3) If you want to give specific parameters to your agent, add them here
-		// Object [] entityParameters0={"My parameters"};
-		//
+		Object[] entityParameters0 = { "My parameters" };
+
 		// //4) Give the class name of your agent to let the system instantiate it
-		// ag=createNewDedaleAgent(c, agentName, DummyWumpusShift2.class.getName(),
-		// entityParameters0);
-		// agentList.add(ag);
+		ag = createNewDedaleAgent(c, agentName, DummyWumpusShift.class.getName(),
+				entityParameters0);
+		agentList.add(ag);
 		//
 		// //1) Get the container where the agent will appear
 		// c = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
@@ -382,15 +384,15 @@ public class Principal {
 
 		// 2) Give the name of your agent, MUST be the same as the one given in the
 		// entities file.
-		agentName = "Tim";
+		agentName = "Agent 1";
 
 		// 3) If you want to give specific parameters to your agent, add them here
-		Object[] entityParametersExplo1 = { "Tim" };
+		Object[] entityParametersExplo1 = { "Agent 1" };
 
 		// 4) Give the class name of your agent to let the system instantiate it
 		// ag=createNewDedaleAgent(c, agentName,DummyMovingAgent.class.getName(),
 		// entityParametersExplo1);
-		ag = createNewDedaleAgent(c, agentName, ExploreCoopAgent.class.getName(), entityParametersExplo1);// ExploreSoloAgent
+		ag = createNewDedaleAgent(c, agentName, ExploCollectAgent.class.getName(), entityParametersExplo1);// ExploreSoloAgent
 		agentList.add(ag);
 
 		/*********
@@ -402,13 +404,13 @@ public class Principal {
 
 		// 2) Give the name of your agent, MUST be the same as the one given in the
 		// entities file.
-		agentName = "Elsa";
+		agentName = "Agent 2";
 
 		// 3) If you want to give specific parameters to your agent, add them here
-		Object[] entityParametersExplo2 = { "Elsa" };
+		Object[] entityParametersExplo2 = { "Agent 2" };
 
 		// 4) Give the class name of your agent to let the system instantiate it
-		ag = createNewDedaleAgent(c, agentName, ExploreCoopAgent.class.getName(), entityParametersExplo2);// ExploreSoloAgent
+		ag = createNewDedaleAgent(c, agentName, ExploCollectAgent.class.getName(), entityParametersExplo2);// ExploreSoloAgent
 		agentList.add(ag);
 
 		//
@@ -422,14 +424,78 @@ public class Principal {
 
 		// 2) Give the name of your agent, MUST be the same as the one given in the
 		// entities file.
-		agentName = "Félix";
+		agentName = "Tanker";
 
 		// 3) If you want to give specific parameters to your agent, add them here
-		Object[] entityParametersExplo3 = { "Félix" };
+		Object[] entityParametersExplo = { "Tanker" };
 
 		// 4) Give the class name of your agent to let the system instantiate it
-		ag = createNewDedaleAgent(c, agentName, ExploreCoopAgent.class.getName(), entityParametersExplo3);// ExploreSoloAgent
+		ag = createNewDedaleAgent(c, agentName, TankerAgent.class.getName(), entityParametersExplo);// ExploreSoloAgent
 
+		agentList.add(ag);
+
+		/*********
+		 * AGENT Explo3
+		 *********/
+
+		// 1) Get the container where the agent will appear
+		c = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
+		Assert.assertNotNull("This container does not exist", c);
+
+		// 2) Give the name of your agent, MUST be the same as the one given in the
+		// entities file.
+		agentName = "Agent 3";
+
+		// 3) If you want to give specific parameters to your agent, add them here
+		Object[] entityParametersExplo3 = { "Agent 3" };
+
+		// 4) Give the class name of your agent to let the system instantiate it
+		ag = createNewDedaleAgent(c, agentName, ExploCollectAgent.class.getName(), entityParametersExplo3);// ExploreSoloAgent
+		agentList.add(ag);
+
+		// 1) Get the container where the agent will appear
+		c = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
+		Assert.assertNotNull("This container does not exist", c);
+
+		// 2) Give the name of your agent, MUST be the same as the one given in the
+		// entities file.
+		agentName = "Agent 4";
+
+		// 3) If you want to give specific parameters to your agent, add them here
+		Object[] entityParametersExplo4 = { "Agent 4" };
+
+		// 4) Give the class name of your agent to let the system instantiate it
+		ag = createNewDedaleAgent(c, agentName, ExploCollectAgent.class.getName(), entityParametersExplo4);// ExploreSoloAgent
+		agentList.add(ag);
+
+		// 1) Get the container where the agent will appear
+		c = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
+		Assert.assertNotNull("This container does not exist", c);
+
+		// 2) Give the name of your agent, MUST be the same as the one given in the
+		// entities file.
+		agentName = "Agent 5";
+
+		// 3) If you want to give specific parameters to your agent, add them here
+		Object[] entityParametersExplo5 = { "Agent 5" };
+
+		// 4) Give the class name of your agent to let the system instantiate it
+		ag = createNewDedaleAgent(c, agentName, ExploreCoopAgent.class.getName(), entityParametersExplo5);// ExploreSoloAgent
+		agentList.add(ag);
+
+		// 1) Get the container where the agent will appear
+		c = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
+		Assert.assertNotNull("This container does not exist", c);
+
+		// 2) Give the name of your agent, MUST be the same as the one given in the
+		// entities file.
+		agentName = "Agent 6";
+
+		// 3) If you want to give specific parameters to your agent, add them here
+		Object[] entityParametersExplo6 = { "Agent 6" };
+
+		// 4) Give the class name of your agent to let the system instantiate it
+		ag = createNewDedaleAgent(c, agentName, ExploreCoopAgent.class.getName(), entityParametersExplo6);// ExploreSoloAgent
 		agentList.add(ag);
 
 		/*********
