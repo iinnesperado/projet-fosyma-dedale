@@ -158,20 +158,20 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 								if (obs.getLeft().getName().equals("Gold")
 										|| obs.getLeft().getName().equals("Diamond")) {
 									// if (((AbstractDedaleAgent) this.myAgent).openLock(obs.getLeft())) {
-									// 	System.out.println(
-									// 			this.myAgent.getLocalName() + " - Ouverture du coffre contenant "
-									// 					+ obs.getLeft().getName());
+									// System.out.println(
+									// this.myAgent.getLocalName() + " - Ouverture du coffre contenant "
+									// + obs.getLeft().getName());
 									// } else {
-									// 	System.out.println(this.myAgent.getLocalName()
-									// 			+ " - Impossible d'ouvrir le coffre contenant " +
-									// 			obs.getLeft().getName());
-									// 	Location positionCoffre = myPosition; // Important de capturer la position
-									// 											// actuelle
-									// 	this.myAgent
-									// 			.addBehaviour(new BesoinExpertise((AbstractDedaleAgent) this.myAgent,
-									// 					this.myMap, list_agentNames, positionCoffre));
+									// System.out.println(this.myAgent.getLocalName()
+									// + " - Impossible d'ouvrir le coffre contenant " +
+									// obs.getLeft().getName());
+									// Location positionCoffre = myPosition; // Important de capturer la position
+									// // actuelle
+									// this.myAgent
+									// .addBehaviour(new BesoinExpertise((AbstractDedaleAgent) this.myAgent,
+									// this.myMap, list_agentNames, positionCoffre));
 									// }
-									openPickTreasure(obs);
+									openTreasure(obs);
 									Integer quantity = Integer.parseInt(obs.getRight());
 									Treasure nouveauTresor = new Treasure(myPosition, obs.getLeft().getName(), quantity,
 											LocalDateTime.now());
@@ -448,7 +448,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 		return finished;
 	}
 
-	public void openPickTreasure(Couple<Observation, String> obs){
+	public void openTreasure(Couple<Observation, String> obs) {
 		if (((AbstractDedaleAgent) this.myAgent).openLock(obs.getLeft())) {
 			System.out.println(
 					this.myAgent.getLocalName() + " - Ouverture du coffre contenant "
@@ -457,8 +457,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 			System.out.println(this.myAgent.getLocalName()
 					+ " - Impossible d'ouvrir le coffre contenant " +
 					obs.getLeft().getName());
-			Location positionCoffre = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition(); // Important de capturer la position
-													// actuelle
+			Location positionCoffre = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
 			this.myAgent
 					.addBehaviour(new BesoinExpertise((AbstractDedaleAgent) this.myAgent,
 							this.myMap, list_agentNames, positionCoffre));

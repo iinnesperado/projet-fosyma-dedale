@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class BesoinExpertise extends OneShotBehaviour {
+public class BesoinExpertise extends SimpleBehaviour {
 
     private static final long serialVersionUID = 1L;
     private boolean termine = false;
@@ -434,7 +434,7 @@ public class BesoinExpertise extends OneShotBehaviour {
         System.out.println(myAgent.getLocalName() + " - Coffre ouvert avec succès!");
         etatActuel = Etat.TERMINE;
         termine = true;
-        onEnd();
+
     }
 
     /**
@@ -454,7 +454,11 @@ public class BesoinExpertise extends OneShotBehaviour {
 
         etatActuel = Etat.TERMINE;
         termine = true;
-        onEnd();
+
     }
 
+    @Override
+    public boolean done() {
+        return this.termine;
+    }
 }
