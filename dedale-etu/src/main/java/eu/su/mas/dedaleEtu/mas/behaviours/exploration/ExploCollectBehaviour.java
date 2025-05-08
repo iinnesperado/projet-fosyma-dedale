@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.math3.analysis.function.Abs;
-
 import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
@@ -186,49 +184,6 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                             for (Couple<Observation, String> obs : observations) {
                                 if (obs.getLeft().getName().equals("Gold")
                                         || obs.getLeft().getName().equals("Diamond")) {
-                                    // Integer quantity = Integer.parseInt(obs.getRight());
-                                    // Treasure nouveauTresor = new Treasure(myPosition, obs.getLeft().getName(),
-                                    // quantity,
-                                    // LocalDateTime.now());
-                                    // Gérer le ramassage
-                                    // if (obs.getLeft().getName().equals("Gold")) {
-                                    // if (this.placeRestantGold != null && this.placeRestantGold > 0) {
-                                    // if (((AbstractDedaleAgent) this.myAgent)
-                                    // .openLock(obs.getLeft())) {
-
-                                    // int collected = ((AbstractDedaleAgent) this.myAgent).pick();
-                                    // System.out.println("Collecté : " + collected + " unités d'or.");
-                                    // nouveauTresor.setQuantity(quantity - collected);
-                                    // this.placeRestantGold -= collected;
-                                    // } else {
-                                    // System.out.println("Impossible d'ouvrir le coffre contenant l'or.");
-                                    // Location positionCoffre = myPosition; // Important de capturer la
-                                    // // position actuelle
-                                    // this.myAgent.addBehaviour(
-                                    // new BesoinExpertise((AbstractDedaleAgent) this.myAgent,
-                                    // this.myMap, list_agentNames, positionCoffre));
-                                    // }
-                                    // }
-                                    // } else if (obs.getLeft().getName().equals("Diamond")) {
-                                    // if (this.placeRestantDiamond != null && this.placeRestantDiamond > 0) {
-                                    // if (((AbstractDedaleAgent) this.myAgent)
-                                    // .openLock(obs.getLeft())) {
-                                    // int collected = ((AbstractDedaleAgent) this.myAgent).pick();
-                                    // System.out.println("Collecté : " + collected + " unités de diamant.");
-                                    // nouveauTresor.setQuantity(quantity - collected);
-                                    // this.placeRestantDiamond -= collected;
-                                    // } else {
-                                    // System.out
-                                    // .println("Impossible d'ouvrir le coffre contenant le diamant.");
-                                    // Location positionCoffre = myPosition; // Important de capturer la
-                                    // // position actuelle
-                                    // this.myAgent.addBehaviour(
-                                    // new BesoinExpertise((AbstractDedaleAgent) this.myAgent,
-                                    // this.myMap, list_agentNames, positionCoffre));
-                                    // }
-                                    // }
-                                    // }
-
                                     Treasure nouveauTresor = openPickTreasure(obs);
 
                                     boolean tresorExistant = false;
@@ -508,73 +463,6 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
         return finished;
     }
 
-    // public void updateTreasureList(Couple<Observation, String> obs, Location
-    // myPosition) {
-    // if (obs.getLeft().equals(Observation.ANY_TREASURE)) {
-    // if (obs.getRight() != null) {
-    // String type = obs.getLeft().getName();
-    // String positionId = myPosition.getLocationId();
-    // String quantity = obs.getRight();
-    // Treasure tresor = new Treasure(myPosition, type, obs.getRight(),
-    // LocalDateTime.now());
-    // if (listeTresors.contains(tresor)) {
-    // // Si le trésor est déjà dans la liste, ou qu'il y a déjà un trésor à cette
-    // // position, on met à jour la quantité
-    // for (Treasure t : listeTresors) {
-    // if (t.getPositionID().equals(positionId)) { // Vérifier si le trésor est à la
-    // même position
-    // if (t.getType().equals(type)) { // Vérifier si le type est le même
-    // // Le type est le même, on met à jour la quantité
-    // t.setAmount(quantity);
-    // t.setRecordTime(LocalDateTime.now());
-    // System.out.println(this.myAgent.getLocalName() + " a mis à jour le trésor : "
-    // + obs.getRight() + " " + obs.getLeft().getName() + " à la position "
-    // + myPosition.getLocationId());
-    // } else {
-    // // Le type est différent, ça veut dire que le golem a déplacé le trésor
-    // // précédemment à cette position
-    // listeTresors.remove(t);
-    // listeTresors.add(tresor);
-    // System.out.println("Il y avait un trésor de type " + t.getType()
-    // + " à la position " + t.getPositionID() + " qui a été remplacé par "
-    // + obs.getRight() + " " + obs.getLeft().getName() + " à la position "
-    // + myPosition.getLocationId());
-    // }
-    // }
-    // }
-    // } else {
-    // // Sinon, on l'ajoute à la liste
-    // listeTresors.add(tresor);
-    // System.out.println(
-    // this.myAgent.getLocalName() + " a trouvé un nouveau trésor : " +
-    // obs.getRight() + " "
-    // + obs.getLeft().getName() + " à la position " + myPosition.getLocationId());
-    // }
-    // }
-    // }
-    // }
-
-    // public Integer getPlaceRestantGold() {
-    // List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent)
-    // this.myAgent).getBackPackFreeSpace();
-    // for (Couple<Observation, Integer> couple : backPack) {
-    // if (couple.getLeft().getName().equals("Gold")) {
-    // return couple.getRight();
-    // }
-    // }
-    // return null;
-    // }
-
-    // public Integer getPlaceRestantDiamond() {
-    // List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent)
-    // this.myAgent).getBackPackFreeSpace();
-    // for (Couple<Observation, Integer> couple : backPack) {
-    // if (couple.getLeft().getName().equals("Diamond")) {
-    // return couple.getRight();
-    // }
-    // }
-    // return null;
-    // }
 
     /**
      * Renvoie la place restante dans le sac-a-dos de l'agent
@@ -617,7 +505,7 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
             } else {
                 System.out.println(
                         this.myAgent.getLocalName() + " - Impossible d'ouvrir le coffre contenant " + typeTresor);
-                Location positionCoffre = myPosition;
+                // Location positionCoffre = myPosition;
                 // this.myAgent.addBehaviour(
                 //         new BesoinExpertise((AbstractDedaleAgent) this.myAgent,
                 //                 this.myMap, list_agentNames, positionCoffre));

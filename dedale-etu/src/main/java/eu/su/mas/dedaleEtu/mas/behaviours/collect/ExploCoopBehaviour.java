@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-
 import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
@@ -24,8 +22,6 @@ import eu.su.mas.dedaleEtu.mas.behaviours.communication.SendTresorBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.communication.TellTankerToMoveBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.exploration.PostExplorationBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
-import eu.su.mas.dedaleEtu.mas.knowledge.TresorInfo;
-
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -165,20 +161,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 							for (Couple<Observation, String> obs : observations) {
 								if (obs.getLeft().getName().equals("Gold")
 										|| obs.getLeft().getName().equals("Diamond")) {
-									// if (((AbstractDedaleAgent) this.myAgent).openLock(obs.getLeft())) {
-									// System.out.println(
-									// this.myAgent.getLocalName() + " - Ouverture du coffre contenant "
-									// + obs.getLeft().getName());
-									// } else {
-									// System.out.println(this.myAgent.getLocalName()
-									// + " - Impossible d'ouvrir le coffre contenant " +
-									// obs.getLeft().getName());
-									// Location positionCoffre = myPosition; // Important de capturer la position
-									// // actuelle
-									// this.myAgent
-									// .addBehaviour(new BesoinExpertise((AbstractDedaleAgent) this.myAgent,
-									// this.myMap, list_agentNames, positionCoffre));
-									// }
 									openTreasure(obs);
 									Integer quantity = Integer.parseInt(obs.getRight());
 									Treasure nouveauTresor = new Treasure(myPosition, obs.getLeft().getName(), quantity,

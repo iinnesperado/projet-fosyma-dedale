@@ -5,19 +5,22 @@ import java.util.List;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.knowledge.MapRepresentation;
-import eu.su.mas.dedaleEtu.mas.knowledge.TresorInfo;
+import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
 import jade.core.behaviours.SimpleBehaviour;
 
+/**
+ * Not implemented
+ */
 public class CollectTreasureBehaviour extends SimpleBehaviour {
 
     private static final long serialVersionUID = 3973250783964285694L;
     private AbstractDedaleAgent agent;
-    private List<TresorInfo> listeTresors = new ArrayList<>();
+    private List<Treasure> listeTresors = new ArrayList<>();
     private MapRepresentation myMap;
     private boolean finished = false;
 
     public CollectTreasureBehaviour(final AbstractDedaleAgent agent, MapRepresentation map,
-            List<TresorInfo> listeTresors) {
+            List<Treasure> listeTresors) {
         super(agent);
         this.agent = agent;
         this.myMap = map;

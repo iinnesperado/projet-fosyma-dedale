@@ -1,6 +1,5 @@
 package eu.su.mas.dedaleEtu.mas.behaviours.exploration;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import dataStructures.tuple.Couple;
@@ -10,10 +9,7 @@ import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
-import eu.su.mas.dedaleEtu.mas.knowledge.TresorInfo;
-import jade.core.AID;
 import jade.core.behaviours.SimpleBehaviour;
-import jade.lang.acl.ACLMessage;
 
 public class MoveToTreasureBehaviour extends SimpleBehaviour {
 

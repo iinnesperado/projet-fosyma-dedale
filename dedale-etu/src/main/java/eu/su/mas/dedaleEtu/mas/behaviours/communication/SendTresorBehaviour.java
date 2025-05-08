@@ -2,8 +2,6 @@ package eu.su.mas.dedaleEtu.mas.behaviours.communication;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
-import eu.su.mas.dedaleEtu.mas.knowledge.TresorMessage;
-
 import jade.core.AID;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -11,7 +9,6 @@ import jade.lang.acl.MessageTemplate;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
