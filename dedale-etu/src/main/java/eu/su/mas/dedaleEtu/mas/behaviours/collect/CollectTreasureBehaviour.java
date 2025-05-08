@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours.treasure;
+package eu.su.mas.dedaleEtu.mas.behaviours.collect;
 
 import java.util.ArrayList;
 import java.util.List;

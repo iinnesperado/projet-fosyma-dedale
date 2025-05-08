@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours.treasure;
+package eu.su.mas.dedaleEtu.mas.behaviours.collect;
 
 import java.time.LocalDateTime;
 import java.util.List;
