@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours.tryoutExplocoopFSM;
+package eu.su.mas.dedaleEtu.mas.tryoutExplocoopFSM;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

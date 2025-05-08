@@ -7,7 +7,7 @@ import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.knowledge.MapRepresentation;
-import eu.su.mas.dedaleEtu.mas.behaviours.tryoutExplocoopFSM.Treasure;
+import eu.su.mas.dedaleEtu.mas.tryoutExplocoopFSM.Treasure;
 import jade.core.behaviours.SimpleBehaviour;
 
 /**

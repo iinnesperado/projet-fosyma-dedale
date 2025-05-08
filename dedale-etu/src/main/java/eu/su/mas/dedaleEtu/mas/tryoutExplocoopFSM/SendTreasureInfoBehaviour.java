@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours.tryoutExplocoopFSM;
+package eu.su.mas.dedaleEtu.mas.tryoutExplocoopFSM;
 
 import java.io.IOException;
 import java.io.Serializable;
