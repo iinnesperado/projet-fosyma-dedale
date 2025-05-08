@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours;
+package eu.su.mas.dedaleEtu.mas.behaviours.Exploration;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -9,7 +9,9 @@ import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
-
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.ReceiveTresorBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.SendMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.SendTresorBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
 
@@ -41,6 +43,7 @@ public class PostExplorationBehaviour extends TickerBehaviour {
     private MapRepresentation myMap;
     private List<String> list_agentNames;
     private List<Treasure> listeTresors = new ArrayList<>();
+    private Observation treasure;
 
     /**
      * 
@@ -75,6 +78,7 @@ public class PostExplorationBehaviour extends TickerBehaviour {
                         Integer quantity = Integer.parseInt(obs.getRight());
                         Treasure nouveauTresor = new Treasure(myPosition, obs.getLeft().getName(), quantity,
                                 LocalDateTime.now());
+                        treasure = obs.getLeft();
                         boolean tresorExistant = false;
                         Treasure tresorARemplacer = null;
 
@@ -82,7 +86,6 @@ public class PostExplorationBehaviour extends TickerBehaviour {
                         for (Treasure tresorActuel : listeTresors) {
                             if (tresorActuel.getPosition().equals(myPosition)) {
                                 tresorExistant = true;
-
                                 // Si même type, mettre à jour quantité
                                 if (tresorActuel.getType().equals(nouveauTresor.getType())) {
                                     tresorActuel.setQuantity(nouveauTresor.getQuantity());
@@ -98,7 +101,7 @@ public class PostExplorationBehaviour extends TickerBehaviour {
                                 break;
                             }
                         }
-
+                        ((AbstractDedaleAgent) this.myAgent).openLock(treasure);
                         // Si besoin de remplacer (type différent à la même position)
                         if (tresorARemplacer != null) {
                             listeTresors.remove(tresorARemplacer);
@@ -114,17 +117,19 @@ public class PostExplorationBehaviour extends TickerBehaviour {
                                     nouveauTresor.getQuantity() + " " + nouveauTresor.getType() +
                                     " en position " + myPosition.getLocationId());
                         }
-
                         System.out.println("TRÉSORS ACTUELS: " + this.listeTresors);
 
                     case AGENTNAME:
+                        if (!obs.getRight().equals("Tanker")) {
+                            ((AbstractDedaleAgent) this.myAgent).emptyMyBackPack(obs.getRight());
+                        }
                         this.myAgent
                                 .addBehaviour(new SendMapBehaviour((AbstractDedaleAgent) this.myAgent,
                                         this.myMap, obs.getRight()));
                         // this.myAgent
-                        //         .addBehaviour(
-                        //                 new ReceiveMapBehaviour((AbstractDedaleAgent) this.myAgent,
-                        //                         this.myMap, obs.getRight()));
+                        // .addBehaviour(
+                        // new ReceiveMapBehaviour((AbstractDedaleAgent) this.myAgent,
+                        // this.myMap, obs.getRight()));
                         this.myAgent
                                 .addBehaviour(new SendTresorBehaviour((AbstractDedaleAgent) this.myAgent,
                                         this.listeTresors, obs.getRight()));

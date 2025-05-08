@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours;
+package eu.su.mas.dedaleEtu.mas.behaviours.Coordination;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +39,16 @@ public class OffreExpertise extends CyclicBehaviour {
     public void action() {
         // Si l'agent est déjà en déplacement vers un coffre
         if (enDeplacement && positionCible != null) {
+            // Vérifier d'abord s'il y a des annulations ou des confirmations d'ouverture
+            if (verifierMessagesCritiques()) {
+                return; // Si un message critique a été traité, on ne continue pas
+            }
             gererDeplacement();
+            return;
+        }
+
+        // Vérifier d'abord les messages critiques même si on n'est pas en déplacement
+        if (verifierMessagesCritiques()) {
             return;
         }
 
@@ -114,6 +123,57 @@ public class OffreExpertise extends CyclicBehaviour {
         }
     }
 
+    /**
+     * Vérifie la présence de messages critiques (annulation, confirmation
+     * d'ouverture)
+     * 
+     * @return true si un message critique a été traité
+     */
+    private boolean verifierMessagesCritiques() {
+        // Vérifier les messages d'annulation
+        MessageTemplate modeleAnnulation = MessageTemplate.and(
+                MessageTemplate.MatchProtocol("ANNULATION-AIDE"),
+                MessageTemplate.MatchPerformative(ACLMessage.CANCEL));
+
+        ACLMessage msgAnnulation = myAgent.receive(modeleAnnulation);
+
+        if (msgAnnulation != null) {
+            String demandeur = msgAnnulation.getSender().getLocalName();
+            System.out.println(myAgent.getLocalName() + " - Demande d'aide annulée par " + demandeur);
+
+            // Si c'est le demandeur actuel qui annule, arrêter le déplacement
+            if (demandeurEnAttente != null && demandeurEnAttente.equals(demandeur)) {
+                System.out.println(myAgent.getLocalName() + " - Arrêt du déplacement vers " + positionCible);
+                enDeplacement = false;
+                positionCible = null;
+                demandeurEnAttente = null;
+            }
+
+            return true;
+        }
+
+        // Vérifier les messages de confirmation d'ouverture du coffre
+        MessageTemplate modeleOuverture = MessageTemplate.MatchProtocol("COFFRE-OUVERT");
+        ACLMessage msgOuverture = myAgent.receive(modeleOuverture);
+
+        if (msgOuverture != null) {
+            String demandeur = msgOuverture.getSender().getLocalName();
+            System.out.println(myAgent.getLocalName() + " - Le coffre a été ouvert avec succès par " + demandeur);
+
+            // Si c'est le demandeur actuel, arrêter le déplacement
+            if (demandeurEnAttente != null && demandeurEnAttente.equals(demandeur)) {
+                System.out.println(myAgent.getLocalName() + " - Mission accomplie, arrêt du déplacement");
+                enDeplacement = false;
+                positionCible = null;
+                demandeurEnAttente = null;
+            }
+
+            return true;
+        }
+
+        return false; // Aucun message critique trouvé
+    }
+
     private void gererDeplacement() {
         Location positionActuelle = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
         if (positionActuelle == null) {
@@ -121,58 +181,55 @@ public class OffreExpertise extends CyclicBehaviour {
             enDeplacement = false;
             return;
         }
-        // Vérifier si l'agent est arrivé à destination
-        List<String> chemin = this.map.getShortestPath(
-                ((AbstractDedaleAgent) this.myAgent).getCurrentPosition().getLocationId(), positionCible);
 
-        if (chemin != null && chemin.size() == 1 && chemin.get(0).equals(positionCible)) {
+        // Vérifier si l'agent est arrivé à destination
+        if (positionActuelle.getLocationId().equals(positionCible)) {
             System.out.println(myAgent.getLocalName() + " - Arrivé à destination: " + positionCible);
             enDeplacement = false;
 
             // Informer le demandeur que l'agent est arrivé
             ACLMessage msgArrivee = new ACLMessage(ACLMessage.INFORM);
-            msgArrivee.setProtocol("ARRIVEE");
+            msgArrivee.setProtocol("ARRIVEE-EXPERTISE");
             msgArrivee.addReceiver(new AID(demandeurEnAttente, AID.ISLOCALNAME));
             msgArrivee.setContent("Je suis arrivé à destination");
-            msgArrivee.setSender(new AID(sender, AID.ISLOCALNAME));
+            msgArrivee.setSender(myAgent.getAID());
 
             ((AbstractDedaleAgent) this.myAgent).sendMessage(msgArrivee);
 
             return;
         }
 
-        // Envoyer périodiquement des mises à jour
-        long maintenant = System.currentTimeMillis();
-        if (maintenant - dernierEnvoi > intervalleEnvoi) {
-            // Informer le demandeur de la progression
-            ACLMessage msgMaj = new ACLMessage(ACLMessage.INFORM);
-            msgMaj.setProtocol("PROGRESSION-EXPERTISE");
-            msgMaj.addReceiver(new AID(demandeurEnAttente, AID.ISLOCALNAME));
-            msgMaj.setContent(
-                    "En route: " + (positionActuelle != null ? positionActuelle.getLocationId() : "inconnue"));
+        // Recalculer le chemin à chaque étape pour éviter les problèmes
+        List<String> chemin = this.map.getShortestPath(positionActuelle.getLocationId(), positionCible);
 
-            // AJOUT - Définir l'expéditeur
-            msgMaj.setSender(myAgent.getAID());
-
-            ((AbstractDedaleAgent) this.myAgent).sendMessage(msgMaj);
-
-            dernierEnvoi = maintenant;
-            System.out.println(myAgent.getLocalName() + " - Progression vers " + positionCible +
-                    ", actuellement en position "
-                    + (positionActuelle != null ? positionActuelle.getLocationId() : "position inconnue"));
+        if (chemin == null || chemin.isEmpty()) {
+            System.out.println(myAgent.getLocalName() + " - Aucun chemin trouvé vers " + positionCible);
+            return;
         }
 
-        // Faire un pas vers la destination
-        if (cheminVersCible != null && !cheminVersCible.isEmpty()) {
-            String prochainNoeud = cheminVersCible.remove(0);
+        // Le premier nœud est la position actuelle, le second est la prochaine étape
+        if (chemin.size() > 1) {
+            String prochainNoeud = chemin.get(0); // Prendre le deuxième élément (le prochain nœud)
             boolean aBouge = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(prochainNoeud));
             if (aBouge) {
                 System.out.println(myAgent.getLocalName() + " - Déplacement vers " + prochainNoeud);
             } else {
                 System.out.println(myAgent.getLocalName() + " - Impossible de me déplacer vers " + prochainNoeud);
+                // Si le déplacement échoue, attendez un peu avant de réessayer
+                block(500);
             }
         } else {
-            System.out.println(myAgent.getLocalName() + " - Chemin vers la cible vide ou non défini");
+            // Si on est arrivé au dernier noeud, on ne peut pas avancer
+            enDeplacement = false;
+            // Informer le demandeur que l'agent est arrivé
+            ACLMessage msgArrivee = new ACLMessage(ACLMessage.INFORM);
+            msgArrivee.setProtocol("ARRIVEE-EXPERTISE");
+            msgArrivee.addReceiver(new AID(demandeurEnAttente, AID.ISLOCALNAME));
+            msgArrivee.setContent("Je suis arrivé près de la cible");
+            msgArrivee.setSender(myAgent.getAID());
+
+            ((AbstractDedaleAgent) this.myAgent).sendMessage(msgArrivee);
+            System.out.println(myAgent.getLocalName() + " - Arrivé près de la cible: " + positionCible);
         }
     }
 

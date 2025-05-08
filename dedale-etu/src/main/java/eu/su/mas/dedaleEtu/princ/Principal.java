@@ -5,12 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import eu.su.mas.dedaleEtu.mas.agents.ExploCollectAgent;
+import eu.su.mas.dedaleEtu.mas.agents.ExploreCoopAgent;
 import eu.su.mas.dedaleEtu.mas.agents.TankerAgent;
-import eu.su.mas.dedaleEtu.mas.agents.dummies.DummyCollectorAgent;
-import eu.su.mas.dedaleEtu.mas.agents.dummies.DummyMovingAgent;
-import eu.su.mas.dedaleEtu.mas.agents.dummies.DummyTankerAgent;
-import eu.su.mas.dedaleEtu.mas.agents.dummies.explo.ExploreCoopAgent;
-import eu.su.mas.dedaleEtu.mas.agents.dummies.explo.ExploreSoloAgent;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agents.GateKeeperAgent;
 import eu.su.mas.dedale.mas.agents.dedaleDummyAgents.DummyWumpusShift;
