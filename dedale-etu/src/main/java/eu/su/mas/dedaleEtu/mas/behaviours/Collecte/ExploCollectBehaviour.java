@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours;
+package eu.su.mas.dedaleEtu.mas.behaviours.Collecte;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,6 +16,13 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
+import eu.su.mas.dedaleEtu.mas.behaviours.Collecte.TellTankerToMoveBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.ReceiveMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.ReceiveTresorBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.SendMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.SendTresorBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Coordination.BesoinExpertise;
+import eu.su.mas.dedaleEtu.mas.behaviours.Coordination.OffreExpertise;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 
 import jade.core.behaviours.SimpleBehaviour;
@@ -56,7 +63,7 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
     private List<Treasure> listeTresors = new ArrayList<>();
     private Integer placeRestantDiamond;
     private Integer placeRestantGold;
-    private Location tankerLocation = null;
+    private String tankerLocation;
 
     /**
      * 
@@ -64,7 +71,9 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
      * @param myMap      known map of the world the agent is living in
      * @param agentNames name of the agents to share the map with
      */
-    public ExploCollectBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap, List<String> agentNames) {
+    public ExploCollectBehaviour(
+            final AbstractDedaleAgent myagent, MapRepresentation myMap,
+            List<String> agentNames) {
         super(myagent);
         this.myMap = myMap;
         this.list_agentNames = agentNames;
@@ -79,6 +88,7 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                 System.out.println("Place restante pour le diamant : " + this.placeRestantDiamond);
             }
         }
+        this.tankerLocation = null;
     }
 
     @Override
@@ -96,7 +106,7 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                         new MapRepresentation(this.myAgent.getLocalName())));
             }
         }
-
+        System.out.println(this.tankerLocation);
         // 0) Retrieve the current position
         Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
 
@@ -141,11 +151,12 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
             }
             // Si le sac à dos est plein, on ne peut pas ramasser de trésor, on va chercher
             // l'agent Tanker pour transférer tous les trésors du sac à dos
-            if (this.getPlaceRestantTresor("Gold") == 0 && this.getPlaceRestantTresor("Diamond") == 0) {
+            if (getPlaceRestantTresor("Gold") == 0
+                    && getPlaceRestantTresor("Diamond") == 0) {
                 // On cherche un agent Tanker
                 // Behaviour qui va chercher un agent Tanker
-                // this.myAgent.addBehaviour(new SearchTankerBehaviour(this.myAgent,
-                // this.list_agentNames));
+                this.myAgent.addBehaviour(new GoToTanker(
+                        (AbstractDedaleAgent) this.myAgent, this.myMap, this.tankerLocation, this.list_agentNames));
             }
             // 3) while openNodes is not empty, continues.
             // s'il n'y a plus de noeud ouvert et que tous les agents ont fini, on arrête le
@@ -248,15 +259,21 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
 
                                     // Si besoin de remplacer (type différent à la même position)
                                     if (tresorARemplacer != null) {
-                                        listeTresors.remove(tresorARemplacer);
-                                        listeTresors.add(nouveauTresor);
+                                        if (tresorARemplacer.getQuantity() > 0) {
+                                            listeTresors.remove(tresorARemplacer);
+                                            listeTresors.add(nouveauTresor);
+                                        } else {
+                                            listeTresors.remove(tresorARemplacer);
+                                        }
                                         System.out.println("Remplacement d'un trésor de " + tresorARemplacer.getType() +
                                                 " par " + nouveauTresor.getQuantity() + " " + nouveauTresor.getType() +
                                                 " en position " + myPosition.getLocationId());
                                     }
                                     // Si nouveau trésor
                                     else if (!tresorExistant) {
-                                        listeTresors.add(nouveauTresor);
+                                        if (nouveauTresor.getQuantity() > 0) {
+                                            listeTresors.add(nouveauTresor);
+                                        }
                                         System.out.println(this.myAgent.getLocalName() + " - Nouveau trésor trouvé: " +
                                                 nouveauTresor.getQuantity() + " " + nouveauTresor.getType() +
                                                 " en position  " + myPosition.getLocationId());
@@ -268,6 +285,24 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                                         && !obs.getRight().equals(this.myAgent.getLocalName())) {
                                     agentNames.add(obs.getRight()); // Récupérer la valeur String et l'ajouter à
                                                                     // agentNames
+                                    MessageTemplate msg = MessageTemplate.and(
+                                            MessageTemplate.MatchProtocol("DEMANDE-POSITION-TANKER"),
+                                            MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+                                    ACLMessage received = this.myAgent.blockingReceive(msg, 5000);
+                                    if (received != null) {
+                                        String sender = received.getSender().getLocalName();
+                                        System.out.println(this.myAgent.getLocalName() + " a reçu une demande de "
+                                                + sender);
+                                        // Répondre à la demande avec la position actuelle
+                                        ACLMessage reply = received.createReply();
+                                        reply.setPerformative(ACLMessage.INFORM);
+                                        reply.setContent(tankerLocation);
+                                        reply.setProtocol("REPONSE-POSITION-TANKER");
+                                        reply.setSender(this.myAgent.getAID());
+                                        ((AbstractDedaleAgent) this.myAgent).sendMessage(reply);
+
+                                    }
+
                                     this.myAgent
                                             .addBehaviour(new SendMapBehaviour((AbstractDedaleAgent) this.myAgent,
                                                     this.myMap, obs.getRight()));
@@ -381,15 +416,15 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                             for (Couple<Observation, String> obs : observations) {
                                 if (obs.getLeft().getName().equals("AgentName")
                                         && (obs.getRight().contains("Tanker") || obs.getRight().contains("tanker"))) {
-                                    tankerLocation = couple.getLeft();
+                                    tankerLocation = couple.getLeft().getLocationId();
+                                    System.out.println(this.myAgent.getLocalName() + " - Tanker trouvé : "
+                                            + obs.getRight());
                                     tankerFound = true;
                                     tankerName = obs.getRight();
+                                    ((AbstractDedaleAgent) this.myAgent).emptyMyBackPack(tankerName);
                                     break;
                                 }
                             }
-                            if (tankerFound)
-                                // On lui transmet tout les trésors qu'on a
-                                ((AbstractDedaleAgent) this.myAgent).emptyMyBackPack(tankerName);
                         }
                     }
 
@@ -591,23 +626,25 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
      */
     public Treasure openPickTreasure(Couple<Observation, String> obs) {
         Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
-        String typeTresor = ((AbstractDedaleAgent) this.myAgent).getMyTreasureType().getName();
         Integer quantity = Integer.parseInt(obs.getRight());
         Treasure nouveauTresor = new Treasure(myPosition, obs.getLeft().getName(), quantity,
                 LocalDateTime.now());
-        if (this.getPlaceRestantTresor(typeTresor) != null && this.getPlaceRestantTresor(typeTresor) > 0) {
+        if (this.getPlaceRestantTresor(obs.getLeft().getName()) != null
+                && this.getPlaceRestantTresor(obs.getLeft().getName()) > 0) {
             if (((AbstractDedaleAgent) this.myAgent)
                     .openLock(obs.getLeft())) {
                 int collected = ((AbstractDedaleAgent) this.myAgent).pick();
                 System.out
-                        .println(this.myAgent.getLocalName() + " - Collecté : " + collected + " unités " + typeTresor);
+                        .println(this.myAgent.getLocalName() + " - Collecté : " + collected + " unités "
+                                + obs.getLeft().getName());
                 nouveauTresor.setQuantity(quantity - collected);
                 System.out.println(this.myAgent.getLocalName() + " - Nouveau trésor trouvé: " +
                         nouveauTresor.getQuantity() + " " + nouveauTresor.getType() +
                         " en position " + myPosition.getLocationId());
             } else {
                 System.out.println(
-                        this.myAgent.getLocalName() + " - Impossible d'ouvrir le coffre contenant " + typeTresor);
+                        this.myAgent.getLocalName() + " - Impossible d'ouvrir le coffre contenant "
+                                + obs.getLeft().getName());
                 Location positionCoffre = myPosition;
                 this.myAgent.addBehaviour(
                         new BesoinExpertise((AbstractDedaleAgent) this.myAgent,

@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours;
+package eu.su.mas.dedaleEtu.mas.behaviours.Communication;
 
 import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
@@ -22,7 +22,7 @@ public class ReceiveTresorBehaviour extends CyclicBehaviour {
     private static final long serialVersionUID = 1L;
 
     private final List<Treasure> listeTresors;
-    
+
     public ReceiveTresorBehaviour(List<Treasure> listeTresors) {
         this.listeTresors = listeTresors;
     }

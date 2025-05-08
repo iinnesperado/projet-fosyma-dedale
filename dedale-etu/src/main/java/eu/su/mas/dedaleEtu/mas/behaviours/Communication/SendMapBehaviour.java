@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours;
+package eu.su.mas.dedaleEtu.mas.behaviours.Communication;
 
 import java.io.IOException;
 
@@ -43,7 +43,8 @@ public class SendMapBehaviour extends OneShotBehaviour {
         // ping.setSender(this.myAgent.getAID());
         // ping.addReceiver(new AID(agent, AID.ISLOCALNAME));
         // ((AbstractDedaleAgent) this.myAgent).sendMessage(ping);
-        // System.out.println(this.myAgent.getLocalName() + " a envoyé un PING à " + agent);
+        // System.out.println(this.myAgent.getLocalName() + " a envoyé un PING à " +
+        // agent);
 
         // // Attente de réponse PONG
         // MessageTemplate msgTemplate = MessageTemplate.and(

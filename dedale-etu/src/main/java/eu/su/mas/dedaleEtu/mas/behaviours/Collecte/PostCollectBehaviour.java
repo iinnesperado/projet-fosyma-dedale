@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours;
+package eu.su.mas.dedaleEtu.mas.behaviours.Collecte;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -9,7 +9,10 @@ import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
-
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.ReceiveTresorBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.SendMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.SendTresorBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Coordination.BesoinExpertise;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
 
@@ -43,6 +46,7 @@ public class PostCollectBehaviour extends TickerBehaviour {
     private List<Treasure> listeTresors = new ArrayList<>();
     private Integer placeRestantGold = null;
     private Integer placeRestantDiamond = null;
+    private String tankerLocation = null;
 
     /**
      * 
@@ -66,6 +70,7 @@ public class PostCollectBehaviour extends TickerBehaviour {
                 System.out.println("Place restante pour le diamant : " + this.placeRestantDiamond);
             }
         }
+        this.tankerLocation = null;
     }
 
     @Override
@@ -77,46 +82,17 @@ public class PostCollectBehaviour extends TickerBehaviour {
             List<Couple<Location, List<Couple<Observation, String>>>> lobs = ((AbstractDedaleAgent) this.myAgent)
                     .observe();
             List<Couple<Observation, String>> lObservations = lobs.get(0).getRight();
+            if (getPlaceRestantTresor("Gold") == 0 || getPlaceRestantTresor("Diamond") == 0) {
+                // Si le sac à dos est plein, on ne peut pas ramasser de trésor
+                System.out.println(this.myAgent.getLocalName() + " - Sac à dos plein, recherche du Tanker");
+                this.myAgent.addBehaviour(new GoToTanker(
+                        (AbstractDedaleAgent) this.myAgent, this.myMap, this.tankerLocation, this.list_agentNames));
+            }
 
             // example related to the use of the backpack for the treasure hunt
             for (Couple<Observation, String> obs : lObservations) {
                 switch (obs.getLeft()) {
                     case DIAMOND, GOLD:
-                        // Integer quantity = Integer.parseInt(obs.getRight());
-                        // Treasure nouveauTresor = new Treasure(myPosition, obs.getLeft().getName(), quantity,
-                        //         LocalDateTime.now());
-
-                        // // Gérer le ramassage
-                        // if (obs.getLeft().getName().equals("Gold")) {
-                        //     if (this.placeRestantGold != null && this.placeRestantGold > 0) {
-                        //         if (((AbstractDedaleAgent) this.myAgent)
-                        //                 .openLock(obs.getLeft())) {
-                        //             int collected = ((AbstractDedaleAgent) this.myAgent).pick();
-                        //             System.out.println("Collecté : " + collected + " unités d'or.");
-                        //             nouveauTresor.setQuantity(quantity - collected);
-                        //             this.placeRestantGold -= collected;
-                        //         } else {
-                        //             System.out.println("Impossible d'ouvrir le coffre contenant l'or.");
-
-                        //         }
-                        //     }
-                        // } else if (obs.getLeft().getName().equals("Diamond")) {
-                        //     if (this.placeRestantDiamond != null && this.placeRestantDiamond > 0) {
-                        //         if (((AbstractDedaleAgent) this.myAgent)
-                        //                 .openLock(obs.getLeft())) {
-                        //             int collected = ((AbstractDedaleAgent) this.myAgent).pick();
-                        //             System.out.println("Collecté : " + collected + " unités de diamant.");
-                        //             nouveauTresor.setQuantity(quantity - collected);
-                        //             this.placeRestantDiamond -= collected;
-                        //         } else {
-                        //             System.out
-                        //                     .println("Impossible d'ouvrir le coffre contenant le diamant.");
-                        //             // Behaviour pour gérer le cas où le coffre
-                        //             // ne peut pas être ouvert
-                        //         }
-                        //     }
-                        // }
-
                         Treasure nouveauTresor = openPickTreasure(obs);
 
                         boolean tresorExistant = false;
@@ -161,13 +137,21 @@ public class PostCollectBehaviour extends TickerBehaviour {
                         System.out.println(this.myAgent.getLocalName() + " - TRÉSORS ACTUELS: " + this.listeTresors);
 
                     case AGENTNAME:
+                        if (obs.getLeft().getName().equals("AgentName")
+                                && (obs.getRight().contains("Tanker") || obs.getRight().contains("tanker"))) {
+                            tankerLocation = lobs.get(0).getLeft().getLocationId();
+                            String tankerName = obs.getRight();
+                            System.out.println(this.myAgent.getLocalName() + " - Tanker trouvé: " + tankerName);
+                            ((AbstractDedaleAgent) this.myAgent).emptyMyBackPack(tankerName);
+                            break;
+                        }
                         this.myAgent
                                 .addBehaviour(new SendMapBehaviour((AbstractDedaleAgent) this.myAgent,
                                         this.myMap, obs.getRight()));
                         // this.myAgent
-                        //         .addBehaviour(
-                        //                 new ReceiveMapBehaviour((AbstractDedaleAgent) this.myAgent,
-                        //                         this.myMap, obs.getRight()));
+                        // .addBehaviour(
+                        // new ReceiveMapBehaviour((AbstractDedaleAgent) this.myAgent,
+                        // this.myMap, obs.getRight()));
                         this.myAgent
                                 .addBehaviour(new SendTresorBehaviour((AbstractDedaleAgent) this.myAgent,
                                         this.listeTresors, obs.getRight()));
@@ -188,7 +172,9 @@ public class PostCollectBehaviour extends TickerBehaviour {
 
     /**
      * Renvoie la place restante dans le sac-a-dos de l'agent
-     * @param typeTresor le tésor dont on veux savoir l'expace restant dans le sac-a-ados
+     * 
+     * @param typeTresor le tésor dont on veux savoir l'expace restant dans le
+     *                   sac-a-ados
      */
     public Integer getPlaceRestantTresor(String typeTresor) {
         List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace();
@@ -202,26 +188,29 @@ public class PostCollectBehaviour extends TickerBehaviour {
 
     /**
      * Essaye d'ouvrir le coffre du trésor et de le ramasser
-     * @return entité tresor qui étais dans le noeuds (reste ou non pas de trésor à ramasser encore)
+     * 
+     * @return entité tresor qui étais dans le noeuds (reste ou non pas de trésor à
+     *         ramasser encore)
      */
-    public Treasure openPickTreasure(Couple<Observation, String> obs){
-        Location myPosition = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
-        String typeTresor = ((AbstractDedaleAgent)this.myAgent).getMyTreasureType().getName();
+    public Treasure openPickTreasure(Couple<Observation, String> obs) {
+        Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
         Integer quantity = Integer.parseInt(obs.getRight());
         Treasure nouveauTresor = new Treasure(myPosition, obs.getLeft().getName(), quantity,
                 LocalDateTime.now());
+        String typeTresor = obs.getLeft().getName();
         if (this.getPlaceRestantTresor(typeTresor) != null && this.getPlaceRestantTresor(typeTresor) > 0) {
             if (((AbstractDedaleAgent) this.myAgent)
                     .openLock(obs.getLeft())) {
 
                 int collected = ((AbstractDedaleAgent) this.myAgent).pick();
-                System.out.println(this.myAgent.getLocalName() + " - Collecté : " + collected + " unités " + typeTresor);
+                System.out
+                        .println(this.myAgent.getLocalName() + " - Collecté : " + collected + " unités " + typeTresor);
                 nouveauTresor.setQuantity(quantity - collected);
                 this.placeRestantGold -= collected;
             } else {
-                System.out.println(this.myAgent.getLocalName() + " - Impossible d'ouvrir le coffre contenant " + typeTresor);
-                Location positionCoffre = myPosition; // Important de capturer la
-                                                      // position actuelle
+                System.out.println(
+                        this.myAgent.getLocalName() + " - Impossible d'ouvrir le coffre contenant " + typeTresor);
+                Location positionCoffre = myPosition;
                 this.myAgent.addBehaviour(
                         new BesoinExpertise((AbstractDedaleAgent) this.myAgent,
                                 this.myMap, list_agentNames, positionCoffre));

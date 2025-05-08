@@ -1,9 +1,10 @@
-package eu.su.mas.dedaleEtu.mas.behaviours;
+package eu.su.mas.dedaleEtu.mas.behaviours.Coordination;
 
 import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
+import eu.su.mas.dedaleEtu.mas.behaviours.Collecte.ExploCollectBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SimpleBehaviour;
@@ -32,6 +33,7 @@ public class BesoinExpertise extends SimpleBehaviour {
     private Integer maForce = 0;
     private Integer lockpickingRequis = 0;
     private Integer forceRequise = 0;
+    private Observation treasure;
 
     // Suivi des agents ayant répondu
     private HashMap<String, Couple<Integer, Integer>> expertsDisponibles = new HashMap<>();
@@ -50,6 +52,10 @@ public class BesoinExpertise extends SimpleBehaviour {
 
     // Suivi des derniers contacts avec les agents
     private HashMap<String, Long> derniersContactsAgents = new HashMap<>();
+
+    // Ajoutez ces variables d'instance
+    private long debutAttenteGlobal = 0;
+    private final long tempsAttenteMaxGlobal = 120000; // 2 minutes max au total
 
     // États du comportement
     private enum Etat {
@@ -90,14 +96,7 @@ public class BesoinExpertise extends SimpleBehaviour {
 
         switch (etatActuel) {
             case DETECTION:
-                // Si on est sur le nœud du coffre, on détecte directement
-                if (maPosition.getLocationId().equals(positionCoffre.getLocationId())) {
-                    detecterCoffre(maPosition);
-                }
-                // Sinon, il faut d'abord retourner à la position du coffre
-                else {
-                    retournerAuCoffre();
-                }
+                detecterCoffre(maPosition);
                 break;
 
             case ATTENTE_AIDE:
@@ -137,8 +136,14 @@ public class BesoinExpertise extends SimpleBehaviour {
             boolean moved = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(prochainNoeud));
             if (!moved) {
                 System.out.println(myAgent.getLocalName() + " - Impossible de me déplacer vers " + prochainNoeud);
-                break; // Sortir de la boucle si le mouvement échoue
+                break;
             }
+        }
+        if (cheminVersCoffre.isEmpty()) {
+            System.out.println(myAgent.getLocalName() + " - Arrivé au coffre, prêt à ouvrir!");
+            etatActuel = Etat.OUVERTURE;
+        } else {
+            System.out.println(myAgent.getLocalName() + " - Toujours en route vers le coffre");
         }
     }
 
@@ -154,11 +159,21 @@ public class BesoinExpertise extends SimpleBehaviour {
         // Recherche de serrures et de coffres
         for (Couple<Location, List<Couple<Observation, String>>> couple : observations) {
             for (Couple<Observation, String> obs : couple.getRight()) {
+                // Vérifier si c'est un coffre
+                if (obs.getLeft().getName().equals("Diamond") ||
+                        obs.getLeft().getName().equals("Gold")) {
+                    coffreTrouve = true;
+                    this.treasure = obs.getLeft();
+                    positionCoffre = couple.getLeft();
+                    System.out.println(myAgent.getLocalName() + " - Coffre trouvé à " +
+                            positionCoffre.getLocationId());
+                }
                 String nomObservation = obs.getLeft().getName();
 
                 // Vérifier si c'est un coffre avec besoin de crochetage
                 if (nomObservation.equals("LockPicking")) {
                     coffreTrouve = true;
+                    treasure = obs.getLeft();
                     lockpickingRequis = Integer.parseInt(obs.getRight());
                     System.out.println(
                             myAgent.getLocalName() + " - Coffre trouvé! Lockpicking requis: " + lockpickingRequis);
@@ -167,6 +182,7 @@ public class BesoinExpertise extends SimpleBehaviour {
                 // Vérifier si c'est un coffre avec besoin de force
                 if (nomObservation.equals("Strength")) {
                     coffreTrouve = true;
+                    treasure = obs.getLeft();
                     forceRequise = Integer.parseInt(obs.getRight());
                     System.out.println(myAgent.getLocalName() + " - Coffre trouvé! Force requise: " + forceRequise);
                 }
@@ -193,8 +209,12 @@ public class BesoinExpertise extends SimpleBehaviour {
                 debutAttente = System.currentTimeMillis();
             }
         } else {
-            System.out.println(myAgent.getLocalName() + " - Aucun coffre détecté à cette position");
-            etatActuel = Etat.ECHEC;
+            // Pas de coffre trouvé, continuer à explorer
+            System.out.println(myAgent.getLocalName() + " - Pas de coffre trouvé, continuer à explorer");
+            // Vérifier si l'agent est sur le nœud du coffre
+            if (!maPosition.getLocationId().equals(positionCoffre.getLocationId())) {
+                retournerAuCoffre();
+            }
         }
     }
 
@@ -277,6 +297,26 @@ public class BesoinExpertise extends SimpleBehaviour {
      * Gère l'attente des réponses des autres agents
      */
     private void attendreAide() {
+        // Initialiser le décompte global lors du premier appel
+        if (debutAttenteGlobal == 0) {
+            debutAttenteGlobal = System.currentTimeMillis();
+        }
+
+        // Vérifier le timeout global absolu - ce timeout ne sera jamais réinitialisé
+        if (System.currentTimeMillis() - debutAttenteGlobal > tempsAttenteMaxGlobal) {
+            System.out.println(myAgent.getLocalName() + " - Temps d'attente global dépassé, abandon définitif");
+            etatActuel = Etat.ECHEC;
+            return;
+        }
+
+        // Vérifier si le nombre maximum de demandes a été atteint
+        if (compteurDemandes >= maxDemandes) {
+            System.out.println(myAgent.getLocalName() + " - Nombre maximum de demandes atteint (" +
+                    maxDemandes + "), abandon de l'ouverture");
+            etatActuel = Etat.ECHEC;
+            return;
+        }
+
         // Relancer périodiquement les demandes d'aide
         long maintenant = System.currentTimeMillis();
         if (maintenant - derniereDemande > intervalleDemande && compteurDemandes < maxDemandes) {
@@ -357,8 +397,12 @@ public class BesoinExpertise extends SimpleBehaviour {
             String aidant = msgProgression.getSender().getLocalName();
             String progression = msgProgression.getContent();
             System.out.println(myAgent.getLocalName() + " - Progression de " + aidant + ": " + progression);
-            // Réinitialiser le compteur de timeout puisqu'on a eu des nouvelles
-            debutAttente = System.currentTimeMillis();
+
+            // Réinitialiser le compteur de timeout avec une limitation
+            // Ne pas réinitialiser si on est déjà dans la deuxième moitié du timeout global
+            if (System.currentTimeMillis() - debutAttenteGlobal < tempsAttenteMaxGlobal / 2) {
+                debutAttente = System.currentTimeMillis();
+            }
         }
 
         // Écouter les messages d'arrivée
@@ -369,6 +413,19 @@ public class BesoinExpertise extends SimpleBehaviour {
             System.out.println(myAgent.getLocalName() + " - Agent " + aidant + " est ARRIVÉ!");
             // Force la vérification physique immédiate
             verifierPresenceAgents();
+        }
+
+        // Écouter les confirmations de mise en route
+        MessageTemplate modeleEnRoute = MessageTemplate.MatchProtocol("EN-ROUTE");
+        ACLMessage msgEnRoute = myAgent.receive(modeleEnRoute);
+        if (msgEnRoute != null) {
+            String aidant = msgEnRoute.getSender().getLocalName();
+            System.out.println(myAgent.getLocalName() + " - Agent " + aidant + " est en route pour aider!");
+
+            // Réinitialiser le timeout si on est dans la première moitié du timeout global
+            if (System.currentTimeMillis() - debutAttenteGlobal < tempsAttenteMaxGlobal / 2) {
+                debutAttente = System.currentTimeMillis();
+            }
         }
 
         // Vérifier si des agents sont arrivés physiquement
@@ -417,24 +474,59 @@ public class BesoinExpertise extends SimpleBehaviour {
     private void ouvrirCoffre() {
         System.out.println(myAgent.getLocalName() + " - Tentative d'ouverture du coffre...");
 
-        // Dans une implémentation réelle, ici on coordonnerait l'ouverture avec les
-        // agents présents
-        // Pour cet exemple, on suppose que le coffre est ouvert avec succès
+        // Vérifier si l'observation du trésor est valide
+        if (treasure == null) {
+            System.out.println(myAgent.getLocalName() + " - Erreur: observation du trésor manquante");
+            // Réessayer de détecter le coffre
+            Location maPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+            if (maPosition != null) {
+                detecterCoffre(maPosition);
 
-        // Envoyer un message de confirmation aux agents qui ont aidé
-        for (String nomAidant : expertsDisponibles.keySet()) {
-            ACLMessage msgMerci = new ACLMessage(ACLMessage.INFORM);
-            msgMerci.setProtocol("COFFRE-OUVERT");
-            msgMerci.setSender(myAgent.getAID());
-            msgMerci.addReceiver(new AID(nomAidant, AID.ISLOCALNAME));
-            msgMerci.setContent("Merci pour votre aide!");
-            ((AbstractDedaleAgent) this.myAgent).sendMessage(msgMerci);
+                // Si après détection, le trésor est toujours null, abandonner
+                if (treasure == null) {
+                    System.out.println(myAgent.getLocalName() + " - Impossible de trouver le trésor, abandon");
+                    etatActuel = Etat.ECHEC;
+                    return;
+                }
+            } else {
+                System.out.println(myAgent.getLocalName() + " - Position actuelle inconnue, abandon");
+                etatActuel = Etat.ECHEC;
+                return;
+            }
         }
 
-        System.out.println(myAgent.getLocalName() + " - Coffre ouvert avec succès!");
-        etatActuel = Etat.TERMINE;
-        termine = true;
+        // Maintenant on peut essayer d'ouvrir le coffre
+        try {
+            // On peut ouvrir le coffre avec l'aide collective
+            if (((AbstractDedaleAgent) this.myAgent).openLock(treasure)) {
+                System.out.println(myAgent.getLocalName() + " - Coffre ouvert avec succès!");
 
+                // Envoyer un message de confirmation aux agents qui ont aidé
+                for (String nomAidant : expertsDisponibles.keySet()) {
+                    ACLMessage msgMerci = new ACLMessage(ACLMessage.INFORM);
+                    msgMerci.setProtocol("COFFRE-OUVERT");
+                    msgMerci.setSender(myAgent.getAID());
+                    msgMerci.addReceiver(new AID(nomAidant, AID.ISLOCALNAME));
+                    msgMerci.setContent("Merci pour votre aide!");
+                    ((AbstractDedaleAgent) this.myAgent).sendMessage(msgMerci);
+                }
+
+                // AJOUT: Relancer l'exploration après succès
+                this.myAgent.addBehaviour(
+                        new ExploCollectBehaviour((AbstractDedaleAgent) this.myAgent, myMap, listeAgents));
+                System.out.println(myAgent.getLocalName() + " - Relance de l'exploration après succès d'ouverture");
+
+                etatActuel = Etat.TERMINE;
+                termine = true;
+            } else {
+                System.out.println(myAgent.getLocalName() + " - Échec de l'ouverture du coffre");
+                etatActuel = Etat.ECHEC;
+            }
+        } catch (Exception e) {
+            System.err.println(myAgent.getLocalName() + " - Erreur lors de l'ouverture: " + e.getMessage());
+            e.printStackTrace();
+            etatActuel = Etat.ECHEC;
+        }
     }
 
     /**

@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours;
+package eu.su.mas.dedaleEtu.mas.behaviours.Exploration;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,6 +15,13 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
+import eu.su.mas.dedaleEtu.mas.behaviours.Collecte.TellTankerToMoveBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.ReceiveMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.ReceiveTresorBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.SendMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.SendTresorBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Coordination.BesoinExpertise;
+import eu.su.mas.dedaleEtu.mas.behaviours.Coordination.OffreExpertise;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.knowledge.TresorInfo;
 

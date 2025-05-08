@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours;
+package eu.su.mas.dedaleEtu.mas.behaviours.Communication;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,11 +37,11 @@ public class ReceiveMapBehaviour extends OneShotBehaviour {
 	public void action() {
 
 		ACLMessage ping = new ACLMessage(ACLMessage.INFORM);
-        ping.setProtocol("PING");
-        ping.setSender(myAgent.getAID());
-        ping.addReceiver(new AID(agent, AID.ISLOCALNAME));
-        ((AbstractDedaleAgent) myAgent).sendMessage(ping);
-        System.out.println(myAgent.getLocalName() + " a envoyé un PING à " + agent);
+		ping.setProtocol("PING");
+		ping.setSender(myAgent.getAID());
+		ping.addReceiver(new AID(agent, AID.ISLOCALNAME));
+		((AbstractDedaleAgent) myAgent).sendMessage(ping);
+		System.out.println(myAgent.getLocalName() + " a envoyé un PING à " + agent);
 
 		// On s'attend à recevoir un PING
 		// Création du template pour recevoir un message de type PING
