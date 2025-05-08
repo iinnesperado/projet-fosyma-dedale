@@ -2,9 +2,15 @@ package eu.su.mas.dedaleEtu.mas.knowledge;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
+import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Location;
+import eu.su.mas.dedale.env.Observation;
 
+/**
+ * @param requirements (lockPicking, strength)
+ */
 public class Treasure implements Serializable {
 
     private static final long serialVersionUID = 7665186571536214170L;
@@ -14,6 +20,7 @@ public class Treasure implements Serializable {
     private Integer quantity;
     private boolean isOpen;
     private LocalDateTime recordTime;
+    private Couple<Integer, Integer> requirements;
     // private boolean inDanger; // Optional - allows to record if a golem is
     // nearby, will make an indicator for priority
 
@@ -27,6 +34,11 @@ public class Treasure implements Serializable {
         this.type = type;
         this.quantity = quantity;
         this.recordTime = recordTime;
+    }
+
+    public Treasure(Location pos, LocalDateTime recorTime) {
+        this.position = pos;
+        this.recordTime = recorTime;
     }
 
     public String getType() {
@@ -72,6 +84,32 @@ public class Treasure implements Serializable {
 
     public boolean getIsOpen() {
         return this.isOpen;
+    }
+
+    public Couple<Integer, Integer> setRequiredSkills(List<Couple<Location, List<Couple<Observation, String>>>> observations) {
+        for (Couple<Location, List<Couple<Observation, String>>> node : observations) {
+            if (node.getLeft().equals(position)) {
+                Integer lockpickingNeeded = null;
+                Integer strengthNeeded = null;
+                
+                for (Couple<Observation, String> obs : node.getRight()) {
+                    switch (obs.getLeft().getName()) {
+                        case "LockPicking":
+                            lockpickingNeeded = Integer.parseInt(obs.getRight());
+                            break;
+                        case "Strength":
+                            strengthNeeded = Integer.parseInt(obs.getRight());
+                            break;
+                    }
+                }
+                return new Couple<>(lockpickingNeeded, strengthNeeded);
+            }
+        }
+        return new Couple<>(0 ,0 ); // Valeurs par défaut si non trouvé
+    }
+
+    public Couple<Integer, Integer> getRequiredSkills(){
+        return requirements;
     }
 
     @Override

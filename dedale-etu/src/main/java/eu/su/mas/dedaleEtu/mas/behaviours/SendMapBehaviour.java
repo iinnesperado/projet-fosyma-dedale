@@ -72,7 +72,7 @@ public class SendMapBehaviour extends OneShotBehaviour {
             // Envoi de la carte
             ((AbstractDedaleAgent) this.myAgent).sendMessage(msg);
             System.out.println(this.myAgent.getLocalName() + " a envoyé une carte à " + agent);
-            onEnd();
+            // onEnd();
         }
     }
 }
