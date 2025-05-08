@@ -4,8 +4,8 @@
 	"initialLocation":"82",
 	"detectionRadius":0,
 	"quantity":95,
-	"lockPickingExpertise":2,
-	"strengthExpertise":2
+	"lockPickingExpertise":1,
+	"strengthExpertise":0
  },
  {
 	"elementName":"gold",
@@ -20,15 +20,15 @@
 	"initialLocation":"14",
 	"detectionRadius":0,
 	"quantity":24,
-	"lockPickingExpertise":3,
-	"strengthExpertise":3
+	"lockPickingExpertise":0,
+	"strengthExpertise":1
  },
  {
 	"elementName":"diamonds",
 	"initialLocation":"66",
 	"detectionRadius":0,
 	"quantity":46,
-	"lockPickingExpertise":2,
+	"lockPickingExpertise":1,
 	"strengthExpertise":1
  },
  {
@@ -37,7 +37,7 @@
 	"detectionRadius":0,
 	"quantity":10,
 	"lockPickingExpertise":1,
-	"strengthExpertise":2
+	"strengthExpertise":0
  },
  {
 	"elementName":"diamonds",

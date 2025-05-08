@@ -27,7 +27,7 @@ public class TankerMovingBehaviour extends SimpleBehaviour {
     private static final long serialVersionUID = 1L;
     private Location originalPosition;
     private Location targetNodeId;
-    private Location myPosition;
+    private Location currentPosition;
     private String agentName;
     private boolean success = false;
 
@@ -41,14 +41,14 @@ public class TankerMovingBehaviour extends SimpleBehaviour {
     @Override
     public void action() {
         // Récupérer la position actuelle du Tanker
-        myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+        currentPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
         List<Couple<Location, List<Couple<Observation, String>>>> lobs = ((AbstractDedaleAgent) this.myAgent).observe();
         // Le Tanker choisit un noeud voisin pour se déplacer
         String targetNodeId = null;
         Iterator<Couple<Location, List<Couple<Observation, String>>>> iter = lobs.iterator();
         while (iter.hasNext()) {
             Couple<Location, List<Couple<Observation, String>>> obs = iter.next();
-            if (obs.getLeft().getLocationId() != myPosition.getLocationId()) {
+            if (obs.getLeft().getLocationId() != currentPosition.getLocationId()) {
                 if (obs.getRight().isEmpty()) {
                     targetNodeId = obs.getLeft().getLocationId();
                     break;
@@ -88,7 +88,7 @@ public class TankerMovingBehaviour extends SimpleBehaviour {
     @Override
     public boolean done() {
         // Vérifier si le Tanker a terminé son déplacement
-        if (myPosition.getLocationId().equals(originalPosition.getLocationId())) {
+        if (currentPosition.getLocationId().equals(originalPosition.getLocationId())) {
             success = true;
             return true;
         }

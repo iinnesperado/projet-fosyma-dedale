@@ -488,10 +488,11 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
      */
     public Treasure openPickTreasure(Couple<Observation, String> obs) {
         Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
-        String typeTresor = ((AbstractDedaleAgent) this.myAgent).getMyTreasureType().getName();
+        // String typeTresor = ((AbstractDedaleAgent) this.myAgent).getMyTreasureType().getName();
         Integer quantity = Integer.parseInt(obs.getRight());
         Treasure nouveauTresor = new Treasure(myPosition, obs.getLeft().getName(), quantity,
-                LocalDateTime.now());
+                LocalDateTime.now()); 
+        String typeTresor = nouveauTresor.getType();
         if (this.getPlaceRestantTresor(typeTresor) != null && this.getPlaceRestantTresor(typeTresor) > 0) {
             if (((AbstractDedaleAgent) this.myAgent)
                     .openLock(obs.getLeft())) {
