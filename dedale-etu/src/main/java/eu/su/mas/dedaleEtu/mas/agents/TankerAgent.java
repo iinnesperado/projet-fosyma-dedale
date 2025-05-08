@@ -8,7 +8,7 @@ import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.platformManagment.*;
-import eu.su.mas.dedaleEtu.mas.behaviours.TankerMovingBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.tanker.TankerMovingBehaviour;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.tools.sniffer.Message;

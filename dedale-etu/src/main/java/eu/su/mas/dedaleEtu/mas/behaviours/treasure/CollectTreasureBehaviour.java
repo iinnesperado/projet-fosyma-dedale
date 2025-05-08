@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours;
+package eu.su.mas.dedaleEtu.mas.behaviours.treasure;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ public class CollectTreasureBehaviour extends SimpleBehaviour {
             finished = true; // Mark as finished if there are no treasures
             return;
         }
-        agent.addBehaviour(new Move2TreasureBehaviour((AbstractDedaleAgent) agent, myMap, listeTresors));
+        // agent.addBehaviour(new MoveToTreasureBehaviour((AbstractDedaleAgent) agent, myMap, listeTresors));
     }
 
     @Override

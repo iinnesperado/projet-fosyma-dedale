@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours;
+package eu.su.mas.dedaleEtu.mas.behaviours.exploration;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,6 +16,14 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
+import eu.su.mas.dedaleEtu.mas.behaviours.collaboration.OffreExpertise;
+import eu.su.mas.dedaleEtu.mas.behaviours.collect.PostCollectBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.communication.AskHelpOpenLockBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.communication.ReceiveMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.communication.ReceiveTresorBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.communication.SendMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.communication.SendTresorBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.communication.TellTankerToMoveBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 
 import jade.core.behaviours.SimpleBehaviour;
@@ -79,6 +87,7 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                 System.out.println("Place restante pour le diamant : " + this.placeRestantDiamond);
             }
         }
+        System.out.println(this.myAgent.getLocalName() + " - Treasor type : "+ ((AbstractDedaleAgent)this.myAgent).getMyTreasureType());
     }
 
     @Override
@@ -609,9 +618,10 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                 System.out.println(
                         this.myAgent.getLocalName() + " - Impossible d'ouvrir le coffre contenant " + typeTresor);
                 Location positionCoffre = myPosition;
-                this.myAgent.addBehaviour(
-                        new BesoinExpertise((AbstractDedaleAgent) this.myAgent,
-                                this.myMap, list_agentNames, positionCoffre));
+                // this.myAgent.addBehaviour(
+                //         new BesoinExpertise((AbstractDedaleAgent) this.myAgent,
+                //                 this.myMap, list_agentNames, positionCoffre));
+                this.myAgent.addBehaviour(new AskHelpOpenLockBehaviour((AbstractDedaleAgent)myAgent, nouveauTresor));
             }
         }
         return nouveauTresor;

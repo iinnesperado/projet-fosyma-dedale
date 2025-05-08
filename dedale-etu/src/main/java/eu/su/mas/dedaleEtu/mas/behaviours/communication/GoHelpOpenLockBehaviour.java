@@ -6,6 +6,8 @@ import java.util.Set;
 import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
+import eu.su.mas.dedale.mas.agent.knowledge.MapRepresentation;
+import eu.su.mas.dedaleEtu.mas.behaviours.exploration.MoveToTreasureBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -15,6 +17,13 @@ import jade.lang.acl.UnreadableException;
 public class GoHelpOpenLockBehaviour extends CyclicBehaviour{
 
     private static final long serialVersionUID = -7652269498493020185L;
+
+    private MapRepresentation myMap;
+
+    public GoHelpOpenLockBehaviour(final AbstractDedaleAgent myagent, MapRepresentation mymap){
+        super(myagent);
+        this.myMap = mymap;
+    }
 
     @Override
     public void action() {
@@ -37,9 +46,9 @@ public class GoHelpOpenLockBehaviour extends CyclicBehaviour{
                 agree.addReceiver(msg.getSender());
                 ((AbstractDedaleAgent)this.myAgent).sendMessage(agree);
                 
-                // Se déplacer vers le coffre
-                
-            }
+                // Move to treasure
+                this.myAgent.addBehaviour(new MoveToTreasureBehaviour((AbstractDedaleAgent)this.myAgent, myMap, treasure, msg.getSender().getName()));
+          }
         }
     }
 
@@ -57,5 +66,4 @@ public class GoHelpOpenLockBehaviour extends CyclicBehaviour{
                 
         return hasLockpicking && hasStrength;
     }
-    
 }

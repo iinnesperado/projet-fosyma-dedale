@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours;
+package eu.su.mas.dedaleEtu.mas.behaviours.collect;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,6 +15,14 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
+import eu.su.mas.dedaleEtu.mas.behaviours.collaboration.OffreExpertise;
+import eu.su.mas.dedaleEtu.mas.behaviours.communication.AskHelpOpenLockBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.communication.ReceiveMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.communication.ReceiveTresorBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.communication.SendMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.communication.SendTresorBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.communication.TellTankerToMoveBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.exploration.PostExplorationBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.knowledge.TresorInfo;
 
@@ -277,7 +285,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 						if (!isAdjacent) {
 							System.out.println(this.myAgent.getLocalName() + " - ATTENTION: Le nœud " + nextNodeId +
 									" n'est pas adjacent à " + myPosition.getLocationId() +
-									". Recherche d'une alternative...");
+									". Recheraache d'une alternative...");
 
 							// Si le nœud n'est pas adjacent, on cherche un nœud adjacent accessible
 							for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
@@ -457,10 +465,15 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 			System.out.println(this.myAgent.getLocalName()
 					+ " - Impossible d'ouvrir le coffre contenant " +
 					obs.getLeft().getName());
-			Location positionCoffre = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
-			this.myAgent
-					.addBehaviour(new BesoinExpertise((AbstractDedaleAgent) this.myAgent,
-							this.myMap, list_agentNames, positionCoffre));
+			// Location positionCoffre = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+			// this.myAgent
+			// 		.addBehaviour(new BesoinExpertise((AbstractDedaleAgent) this.myAgent,
+			// 				this.myMap, list_agentNames, positionCoffre));
+			
+			Integer quantity = Integer.parseInt(obs.getRight());
+			Treasure tresor = new Treasure(((AbstractDedaleAgent)this.myAgent).getCurrentPosition(), obs.getLeft().getName(), quantity,
+					LocalDateTime.now());
+			this.myAgent.addBehaviour(new AskHelpOpenLockBehaviour((AbstractDedaleAgent)myAgent, tresor));
 		}
 	}
 

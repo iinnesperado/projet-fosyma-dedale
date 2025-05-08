@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours;
+package eu.su.mas.dedaleEtu.mas.behaviours.collaboration;
 
 import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;

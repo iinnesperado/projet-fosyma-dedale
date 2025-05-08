@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours;
+package eu.su.mas.dedaleEtu.mas.behaviours.treasure;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,6 +15,13 @@ public class OpenPickTreasureBehaviour extends OneShotBehaviour {
 
     private static final long serialVersionUID = 3973250783964285694L;
     private boolean finished = false;
+    private List<Treasure> listeTresors;
+
+
+    public OpenPickTreasureBehaviour(final AbstractDedaleAgent myagent, List<Treasure> listeTresors){
+        super(myagent);
+        this.listeTresors = listeTresors;
+    }
 
     @Override
     public void action() {
@@ -40,9 +47,10 @@ public class OpenPickTreasureBehaviour extends OneShotBehaviour {
                         System.out.println(
                                 this.myAgent.getLocalName() + " - Impossible d'ouvrir le coffre contenant " + typeTresor);
                         nouveauTresor.setRequiredSkills(observations);
-                        this.myAgent.addBehaviour(new AskHelpOpenLockBehaviour((AbstractDedaleAgent)this.myAgent, nouveauTresor));
+                        // this.myAgent.addBehaviour(new AskHelpOpenLockBehaviour((AbstractDedaleAgent)this.myAgent, nouveauTresor));
                     }
                 }
+                updateTreasureList(nouveauTresor, myPosition);
             }
         }
     }
@@ -61,6 +69,49 @@ public class OpenPickTreasureBehaviour extends OneShotBehaviour {
             }
         }
         return null;
+    }
+
+    public void updateTreasureList(Treasure nouveauTresor, Location myPosition){
+        boolean tresorExistant = false;
+        Treasure tresorARemplacer = null;
+
+        // Rechercher si le trésor existe déjà à cette position
+        for (Treasure tresorActuel : listeTresors) {
+            if (tresorActuel.getPosition().equals(nouveauTresor.getPosition())) {
+                tresorExistant = true;
+
+                // Si même type, mettre à jour quantité
+                if (tresorActuel.getType().equals(nouveauTresor.getType())) {
+                    tresorActuel.setQuantity(nouveauTresor.getQuantity());
+                    tresorActuel.setRecordTime(LocalDateTime.now());
+                    System.out.println(this.myAgent.getLocalName()
+                            + " - Mise à jour du trésor: " +
+                            nouveauTresor.getQuantity() + " " + nouveauTresor.getType() +
+                            " en position " + myPosition.getLocationId());
+                } else {
+                    // Type différent, marquer pour remplacement
+                    tresorARemplacer = tresorActuel;
+                }
+                break;
+            }
+        }
+
+        // Si besoin de remplacer (type différent à la même position)
+        if (tresorARemplacer != null) {
+            listeTresors.remove(tresorARemplacer);
+            listeTresors.add(nouveauTresor);
+            System.out.println("Remplacement d'un trésor de " + tresorARemplacer.getType() +
+                    " par " + nouveauTresor.getQuantity() + " " + nouveauTresor.getType() +
+                    " en position " + myPosition.getLocationId());
+        }
+        // Si nouveau trésor
+        else if (!tresorExistant) {
+            listeTresors.add(nouveauTresor);
+            System.out.println(this.myAgent.getLocalName() + " - Nouveau trésor trouvé: " +
+                    nouveauTresor.getQuantity() + " " + nouveauTresor.getType() +
+                    " en position  " + myPosition.getLocationId());
+        }
+        System.out.println(this.myAgent.getLocalName() + " - TRÉSORS ACTUELS: " + this.listeTresors);
     }
 
 }

@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours.communication;
+package eu.su.mas.dedaleEtu.mas.behaviours.collaboration;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,13 +12,18 @@ import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-public class OpenPickCoopBehaviour extends OneShotBehaviour{
+public class OpenLockCoopBehaviour extends OneShotBehaviour{
 
     private static final long serialVersionUID = -480474568264579007L;
 
     private List<Treasure> listeTresors;
 
-    public OpenPickCoopBehaviour(final AbstractDedaleAgent myagent, List<Treasure> treasures){
+    /**
+     * Gère la confirmation de l'aide qui arrive, il a un timeout de 5s
+     * @param myagent
+     * @param treasures
+     */
+    public OpenLockCoopBehaviour(final AbstractDedaleAgent myagent, List<Treasure> treasures){
         super(myagent);
         this.listeTresors = treasures;
     }
@@ -31,7 +36,7 @@ public class OpenPickCoopBehaviour extends OneShotBehaviour{
         while (helpers < 1 && waitTime > 0) { // Attendre au moins 1 assistant
             MessageTemplate msgTemplate = MessageTemplate.and(MessageTemplate.MatchProtocol("GO-HELP"), MessageTemplate.MatchPerformative(ACLMessage.AGREE));
             ACLMessage reply = this.myAgent.blockingReceive(msgTemplate,1000);
-            if (reply != null && reply.getPerformative() == ACLMessage.AGREE) {
+            if (reply != null) {
                 helpers++;
             }
             waitTime -= 1000;
@@ -39,40 +44,32 @@ public class OpenPickCoopBehaviour extends OneShotBehaviour{
         
         if (helpers > 0) {
             Location myPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
-            Treasure nouveauTresor = openPickTreasure(myPosition); // Tenter avec les nouveaux arrivants
+            Treasure nouveauTresor = openTreasure(myPosition); // Tenter avec les nouveaux arrivants
             updateTreasureList(nouveauTresor, myPosition);
         } else {
             return ; // Abandonner après timeout
         }    
     }
 
-    public Treasure openPickTreasure(Location myPosition){
-        String typeTresor = ((AbstractDedaleAgent) this.myAgent).getMyTreasureType().getName();
+    public Treasure openTreasure(Location myPosition){
         Treasure nouveauTresor = new Treasure(myPosition, LocalDateTime.now());
     
         List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent)this.myAgent).observe();
         for (Couple<Location, List<Couple<Observation, String>>> node : observations){
             for (Couple<Observation, String> obs : node.getRight()){
-                Integer quantity = Integer.parseInt(obs.getRight());
-                nouveauTresor.setQuantity(quantity);
-                nouveauTresor.setType(obs.getLeft().getName());
-
-                if (this.getPlaceRestantTresor(typeTresor) != null && this.getPlaceRestantTresor(typeTresor) > 0) {
-                    if (((AbstractDedaleAgent) this.myAgent)
-                            .openLock(obs.getLeft())) {
-                        int collected = ((AbstractDedaleAgent) this.myAgent).pick();
-                        System.out
-                                .println(this.myAgent.getLocalName() + " - Collecté : " + collected + " unités " + typeTresor);
-                        nouveauTresor.setQuantity(quantity - collected);
-                        System.out.println(this.myAgent.getLocalName() + " - Nouveau trésor trouvé: " +
-                                nouveauTresor.getQuantity() + " " + nouveauTresor.getType() +
-                                " en position " + myPosition.getLocationId());
-                    } else {
-                        System.out.println(
-                                this.myAgent.getLocalName() + " - Impossible d'ouvrir le coffre contenant " + typeTresor);
-                        nouveauTresor.setRequiredSkills(observations);
-                        this.myAgent.addBehaviour(new AskHelpOpenLockBehaviour((AbstractDedaleAgent)this.myAgent, nouveauTresor));
-                    }
+                if (((AbstractDedaleAgent) this.myAgent).openLock(obs.getLeft())) {
+                    System.out.println(
+                            this.myAgent.getLocalName() + " - Ouverture du coffre contenant "
+                                    + obs.getLeft().getName());
+                } else {
+                    System.out.println(this.myAgent.getLocalName()
+                            + " - Impossible d'ouvrir le coffre contenant " +
+                            obs.getLeft().getName());
+                }
+                if (obs.getLeft().equals(Observation.ANY_TREASURE)){
+                    Integer quantity = Integer.parseInt(obs.getRight());
+                    nouveauTresor.setQuantity(quantity);
+                    nouveauTresor.setType(obs.getLeft().getName());
                 }
             }
         }
