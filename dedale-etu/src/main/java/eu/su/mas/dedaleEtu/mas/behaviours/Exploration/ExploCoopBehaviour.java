@@ -268,77 +268,61 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
 					}
 				}
-				// if (nextNodeId == null) {
-				// // Si aucun nœud ouvert n'est directement accessible, on calcule le chemin le
-				// // plus court
-				// List<String> path =
-				// this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId());
-				// if (path != null && !path.isEmpty()) {
-				// nextNodeId = path.get(0); // Premier pas du chemin
-
-				// boolean isAdjacent = false;
-				// for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
-				// if (couple.getLeft().getLocationId().equals(nextNodeId)) {
-				// isAdjacent = true;
-				// break;
-				// }
-				// }
-
-				// if (!isAdjacent) {
-				// System.out.println(this.myAgent.getLocalName() + " - ATTENTION: Le nœud " +
-				// nextNodeId +
-				// " n'est pas adjacent à " + myPosition.getLocationId() +
-				// ". Recherche d'une alternative...");
-
-				// // Si le nœud n'est pas adjacent, on cherche un nœud adjacent accessible
-				// for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
-				// String candidateId = couple.getLeft().getLocationId();
-				// if (!candidateId.equals(myPosition.getLocationId())) {
-				// nextNodeId = candidateId;
-				// System.out.println(
-				// this.myAgent.getLocalName() + " - Alternative trouvée: " + nextNodeId);
-				// break;
-				// }
-				// }
-				// }
-				// } else {
-				// System.out.println(
-				// this.myAgent.getLocalName() + " - ERREUR: Aucun chemin trouvé vers un nœud
-				// ouvert");
-				// try {
-				// this.myAgent.doWait(10000); // Attendre avant de réessayer
-				// } catch (Exception e) {
-				// e.printStackTrace();
-				// }
-				// return; // Sortir de l'action pour réessayer au prochain cycle
-				// }
-				// }
-
-				// // Vérifier une dernière fois que le nœud cible est bien dans les
-				// observations
-				// boolean targetIsObservable = false;
-				// for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
-				// if (couple.getLeft().getLocationId().equals(nextNodeId)) {
-				// targetIsObservable = true;
-				// break;
-				// }
-				// }
-
-				// if (!targetIsObservable) {
-				// System.out.println(this.myAgent.getLocalName() + " - ERREUR CRITIQUE: Le nœud
-				// cible " + nextNodeId +
-				// " n'est pas observable depuis la position actuelle");
-				// return; // Sortir de l'action pour réessayer au prochain cycle
-				// }
 				if (nextNodeId == null) {
-					System.out
-							.println(this.myAgent.getLocalName() + " - Aucune alternative trouvée, attente prolongée");
-					// Attendre plus longtemps avant de réessayer
-					try {
-						this.myAgent.doWait(5000);
-					} catch (Exception e) {
-						e.printStackTrace();
+					// Si aucun nœud ouvert n'est directement accessible, on calcule le chemin le
+					// plus court
+					List<String> path = this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId());
+					if (path != null && !path.isEmpty()) {
+						nextNodeId = path.get(0); // Premier pas du chemin
+
+						boolean isAdjacent = false;
+						for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
+							if (couple.getLeft().getLocationId().equals(nextNodeId)) {
+								isAdjacent = true;
+								break;
+							}
+						}
+
+						if (!isAdjacent) {
+							System.out.println(this.myAgent.getLocalName() + " - ATTENTION: Le nœud " + nextNodeId +
+									" n'est pas adjacent à " + myPosition.getLocationId() +
+									". Recherche d'une alternative...");
+
+							// Si le nœud n'est pas adjacent, on cherche un nœud adjacent accessible
+							for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
+								String candidateId = couple.getLeft().getLocationId();
+								if (!candidateId.equals(myPosition.getLocationId())) {
+									nextNodeId = candidateId;
+									System.out.println(
+											this.myAgent.getLocalName() + " - Alternative trouvée: " + nextNodeId);
+									break;
+								}
+							}
+						}
+					} else {
+						System.out.println(
+								this.myAgent.getLocalName() + " - ERREUR: Aucun chemin trouvé vers un nœud ouvert");
+						try {
+							this.myAgent.doWait(10000); // Attendre avant de réessayer
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						return; // Sortir de l'action pour réessayer au prochain cycle
 					}
+				}
+
+				// Vérifier une dernière fois que le nœud cible est bien dans les observations
+				boolean targetIsObservable = false;
+				for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
+					if (couple.getLeft().getLocationId().equals(nextNodeId)) {
+						targetIsObservable = true;
+						break;
+					}
+				}
+
+				if (!targetIsObservable) {
+					System.out.println(this.myAgent.getLocalName() + " - ERREUR CRITIQUE: Le nœud cible " + nextNodeId +
+							" n'est pas observable depuis la position actuelle");
 					return; // Sortir de l'action pour réessayer au prochain cycle
 				}
 
