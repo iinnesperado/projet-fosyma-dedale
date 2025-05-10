@@ -49,7 +49,7 @@
   "communicationRange": 2,
   "initialLocation": "88",
   "backPackCapacityGold":300,
-  "backPackCapacityDiamond":300, 
+  "backPackCapacityDiamond": 300, 
   "detectionRadius": 0,
   "strengthExpertise": 2,
   "lockPickingExpertise":1

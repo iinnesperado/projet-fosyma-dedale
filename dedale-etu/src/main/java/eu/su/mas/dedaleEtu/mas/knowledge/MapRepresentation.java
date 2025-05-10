@@ -390,4 +390,20 @@ public class MapRepresentation implements Serializable {
 				.findAny()).isPresent();
 	}
 
+	/**
+	 * Vérifie si un nœud existe dans la carte
+	 * 
+	 * @param nodeId l'identifiant du nœud
+	 * @return vrai si le nœud existe, faux sinon
+	 */
+	public boolean hasNode(String nodeId) {
+		if (nodeId == null)
+			return false;
+		try {
+			return this.g.getNode(nodeId) != null;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
 }
