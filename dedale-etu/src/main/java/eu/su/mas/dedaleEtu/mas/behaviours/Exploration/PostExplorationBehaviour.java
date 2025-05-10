@@ -120,7 +120,7 @@ public class PostExplorationBehaviour extends TickerBehaviour {
                         System.out.println("TRÉSORS ACTUELS: " + this.listeTresors);
 
                     case AGENTNAME:
-                        if (!obs.getRight().equals("Tanker")) {
+                        if (!obs.getRight().equals("Tank")) {
                             ((AbstractDedaleAgent) this.myAgent).emptyMyBackPack(obs.getRight());
                         }
                         this.myAgent

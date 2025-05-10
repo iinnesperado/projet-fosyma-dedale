@@ -138,7 +138,7 @@ public class PostCollectBehaviour extends TickerBehaviour {
 
                     case AGENTNAME:
                         if (obs.getLeft().getName().equals("AgentName")
-                                && (obs.getRight().contains("Tanker") || obs.getRight().contains("tanker"))) {
+                                && (obs.getRight().contains("Tank") || obs.getRight().contains("tank"))) {
                             tankerLocation = lobs.get(0).getLeft().getLocationId();
                             String tankerName = obs.getRight();
                             System.out.println(this.myAgent.getLocalName() + " - Tanker trouvé: " + tankerName);
