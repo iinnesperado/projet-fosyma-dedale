@@ -121,29 +121,85 @@ public class BesoinExpertise extends SimpleBehaviour {
      * il doit y retourner avant de pouvoir l'ouvrir
      */
     private void retournerAuCoffre() {
-        System.out.println(
-                myAgent.getLocalName() + " - Retour vers le nœud du coffre : " + positionCoffre.getLocationId());
-        // Calculer le chemin vers le coffre
-        List<String> cheminVersCoffre = myMap.getShortestPath(
-                ((AbstractDedaleAgent) myAgent).getCurrentPosition().getLocationId(),
-                positionCoffre.getLocationId());
-        if (cheminVersCoffre == null || cheminVersCoffre.isEmpty()) {
-            System.out.println(myAgent.getLocalName() + " - Aucun chemin trouvé vers le coffre");
-            return;
-        }
-        while (cheminVersCoffre.size() > 0) {
-            String prochainNoeud = cheminVersCoffre.remove(0);
-            boolean moved = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(prochainNoeud));
-            if (!moved) {
-                System.out.println(myAgent.getLocalName() + " - Impossible de me déplacer vers " + prochainNoeud);
-                break;
+        try {
+            Location maPositionActuelle = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+            if (maPositionActuelle == null) {
+                System.out.println(
+                        myAgent.getLocalName() + " - Position actuelle inconnue, impossible de retourner au coffre");
+                return;
             }
-        }
-        if (cheminVersCoffre.isEmpty()) {
-            System.out.println(myAgent.getLocalName() + " - Arrivé au coffre, prêt à ouvrir!");
-            etatActuel = Etat.OUVERTURE;
-        } else {
-            System.out.println(myAgent.getLocalName() + " - Toujours en route vers le coffre");
+
+            String nodeSource = maPositionActuelle.getLocationId();
+            String nodeDestination = positionCoffre.getLocationId();
+
+            System.out.println(myAgent.getLocalName() + " - Retour vers le nœud du coffre : " + nodeDestination +
+                    " depuis " + nodeSource);
+
+            // Vérifier que les deux nœuds existent dans le graphe
+            if (!myMap.hasNode(nodeSource)) {
+                System.out.println(myAgent.getLocalName() + " - Le nœud source " + nodeSource +
+                        " n'existe pas dans la carte. Mise à jour de la carte...");
+
+                // On peut ajouter le nœud source si on est dessus
+                myMap.addNewNode(nodeSource);
+
+                // Mettre à jour la carte avec les voisins
+                List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent) this.myAgent)
+                        .observe();
+
+                for (Couple<Location, List<Couple<Observation, String>>> obs : observations) {
+                    String nodeId = obs.getLeft().getLocationId();
+                    if (!nodeId.equals(maPositionActuelle.getLocationId())) {
+                        // C'est un voisin, ajoutons-le avec un lien
+                        myMap.addNode(nodeId, MapRepresentation.MapAttribute.open);
+                        myMap.addEdge(nodeSource, nodeId);
+                    }
+                }
+            }
+
+            if (!myMap.hasNode(nodeDestination)) {
+                System.out.println(myAgent.getLocalName() + " - Le nœud destination " + nodeDestination +
+                        " n'existe pas dans la carte. Impossible de calculer le chemin.");
+                return;
+            }
+
+            // Calculer le chemin vers le coffre
+            List<String> cheminVersCoffre = null;
+            try {
+                cheminVersCoffre = myMap.getShortestPath(nodeSource, nodeDestination);
+            } catch (Exception e) {
+                System.out.println(myAgent.getLocalName() + " - Erreur lors du calcul du chemin: " + e.getMessage());
+                etatActuel = Etat.ECHEC;
+                return;
+            }
+
+            if (cheminVersCoffre == null || cheminVersCoffre.isEmpty()) {
+                System.out.println(myAgent.getLocalName() + " - Aucun chemin trouvé vers le coffre");
+                etatActuel = Etat.ECHEC;
+                return;
+            }
+
+            // Se déplacer d'un pas à la fois vers le coffre
+            if (cheminVersCoffre.size() > 0) {
+                String prochainNoeud = cheminVersCoffre.get(0);
+                System.out.println(myAgent.getLocalName() + " - Déplacement vers " + prochainNoeud);
+                boolean moved = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(prochainNoeud));
+
+                if (moved) {
+                    System.out.println(myAgent.getLocalName() + " - Déplacement réussi vers " + prochainNoeud);
+                    // Si on est arrivé au coffre
+                    if (prochainNoeud.equals(nodeDestination)) {
+                        System.out.println(myAgent.getLocalName() + " - Arrivé au coffre, prêt à ouvrir!");
+                        etatActuel = Etat.OUVERTURE;
+                    }
+                } else {
+                    System.out.println(myAgent.getLocalName() + " - Impossible de se déplacer vers " + prochainNoeud);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println(myAgent.getLocalName() + " - Exception lors du retour au coffre: " + e.getMessage());
+            e.printStackTrace();
+            etatActuel = Etat.ECHEC;
         }
     }
 

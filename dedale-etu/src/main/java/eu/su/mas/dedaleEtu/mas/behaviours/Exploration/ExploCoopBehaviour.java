@@ -268,186 +268,210 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 
 					}
 				}
-				if (nextNodeId == null) {
-					// Si aucun nœud ouvert n'est directement accessible, on calcule le chemin le
-					// plus court
-					List<String> path = this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId());
-					if (path != null && !path.isEmpty()) {
-						nextNodeId = path.get(0); // Premier pas du chemin
-
-						boolean isAdjacent = false;
-						for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
-							if (couple.getLeft().getLocationId().equals(nextNodeId)) {
-								isAdjacent = true;
-								break;
-							}
-						}
-
-						if (!isAdjacent) {
-							System.out.println(this.myAgent.getLocalName() + " - ATTENTION: Le nœud " + nextNodeId +
-									" n'est pas adjacent à " + myPosition.getLocationId() +
-									". Recherche d'une alternative...");
-
-							// Si le nœud n'est pas adjacent, on cherche un nœud adjacent accessible
-							for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
-								String candidateId = couple.getLeft().getLocationId();
-								if (!candidateId.equals(myPosition.getLocationId())) {
-									nextNodeId = candidateId;
-									System.out.println(
-											this.myAgent.getLocalName() + " - Alternative trouvée: " + nextNodeId);
-									break;
-								}
-							}
-						}
-					} else {
-						System.out.println(
-								this.myAgent.getLocalName() + " - ERREUR: Aucun chemin trouvé vers un nœud ouvert");
-						try {
-							this.myAgent.doWait(10000); // Attendre avant de réessayer
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-						return; // Sortir de l'action pour réessayer au prochain cycle
-					}
+			}
+			if (nextNodeId == null) {
+				// Si aucun nœud ouvert n'est directement accessible, on calcule le chemin le
+				// plus
+				// court
+				List<String> path = this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId());
+				if (path != null && !path.isEmpty()) {
+					nextNodeId = path.get(0); // Premier pas du chemin
 				}
+			}
+			// if (nextNodeId == null) {
+			// // Si aucun nœud ouvert n'est directement accessible, on calcule le chemin le
+			// // plus court
+			// List<String> path =
+			// this.myMap.getShortestPathToClosestOpenNode(myPosition.getLocationId());
+			// if (path != null && !path.isEmpty()) {
+			// nextNodeId = path.get(0); // Premier pas du chemin
 
-				// Vérifier une dernière fois que le nœud cible est bien dans les observations
-				boolean targetIsObservable = false;
+			// boolean isAdjacent = false;
+			// for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
+			// if (couple.getLeft().getLocationId().equals(nextNodeId)) {
+			// isAdjacent = true;
+			// break;
+			// }
+			// }
+
+			// if (!isAdjacent) {
+			// System.out.println(this.myAgent.getLocalName() + " - ATTENTION: Le nœud " +
+			// nextNodeId +
+			// " n'est pas adjacent à " + myPosition.getLocationId() +
+			// ". Recherche d'une alternative...");
+
+			// // Si le nœud n'est pas adjacent, on cherche un nœud adjacent accessible
+			// for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
+			// String candidateId = couple.getLeft().getLocationId();
+			// if (!candidateId.equals(myPosition.getLocationId())) {
+			// nextNodeId = candidateId;
+			// System.out.println(
+			// this.myAgent.getLocalName() + " - Alternative trouvée: " + nextNodeId);
+			// break;
+			// }
+			// }
+			// }
+			// } else {
+			// System.out.println(
+			// this.myAgent.getLocalName() + " - ERREUR: Aucun chemin trouvé vers un nœud
+			// ouvert");
+			// try {
+			// this.myAgent.doWait(10000); // Attendre avant de réessayer
+			// } catch (Exception e) {
+			// e.printStackTrace();
+			// }
+			// return; // Sortir de l'action pour réessayer au prochain cycle
+			// }
+			// }
+
+			// // Vérifier une dernière fois que le nœud cible est bien dans les
+			// observations
+			// boolean targetIsObservable = false;
+			// for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
+			// if (couple.getLeft().getLocationId().equals(nextNodeId)) {
+			// targetIsObservable = true;
+			// break;
+			// }
+			// }
+
+			// if (!targetIsObservable) {
+			// System.out.println(this.myAgent.getLocalName() + " - ERREUR CRITIQUE: Le nœud
+			// cible " + nextNodeId +
+			// " n'est pas observable depuis la position actuelle");
+			// return; // Sortir de l'action pour réessayer au prochain cycle
+			// }
+
+			if (nextNodeId == null) {
+				System.out.println(this.myAgent.getLocalName() + " - Aucune alternative trouvée, attente prolongée");
+				// Attendre plus longtemps avant de réessayer
+				try {
+					this.myAgent.doWait(5000);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				return; // Sortir de l'action pour réessayer au prochain cycle
+			}
+
+			// Maintenant on peut tenter le déplacement
+			boolean moved = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
+
+			if (!moved) {
+				System.out.println(this.myAgent.getLocalName() + " - Collision détectée vers " + nextNodeId);
+
+				// Vérifier si un Tanker est présent sur le nœud cible
+				boolean tankerFound = false;
+				String tankerName = null;
+
+				// Parcourir les observations pour trouver un éventuel Tanker
 				for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
 					if (couple.getLeft().getLocationId().equals(nextNodeId)) {
-						targetIsObservable = true;
-						break;
+						List<Couple<Observation, String>> observations = couple.getRight();
+						for (Couple<Observation, String> obs : observations) {
+							if (obs.getLeft().getName().equals("AgentName")
+									&& (obs.getRight().contains("Tank") || obs.getRight().contains("tank"))) {
+								tankerFound = true;
+								tankerName = obs.getRight();
+								break;
+							}
+						}
+						if (tankerFound)
+							break;
 					}
 				}
 
-				if (!targetIsObservable) {
-					System.out.println(this.myAgent.getLocalName() + " - ERREUR CRITIQUE: Le nœud cible " + nextNodeId +
-							" n'est pas observable depuis la position actuelle");
-					return; // Sortir de l'action pour réessayer au prochain cycle
-				}
+				if (tankerFound) {
+					// Un Tanker est sur notre chemin, lui demander de se déplacer
+					System.out.println(
+							this.myAgent.getLocalName() + " - Tanker détecté sur " + nextNodeId);
+					TellTankerToMoveBehaviour tellTankerBehaviour = new TellTankerToMoveBehaviour(
+							(AbstractDedaleAgent) this.myAgent, tankerName, myPosition.getLocationId());
+					this.myAgent.addBehaviour(tellTankerBehaviour);
 
-				// Maintenant on peut tenter le déplacement
-				boolean moved = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
-
-				if (!moved) {
-					System.out.println(this.myAgent.getLocalName() + " - Collision détectée vers " + nextNodeId);
-
-					// Vérifier si un Tanker est présent sur le nœud cible
-					boolean tankerFound = false;
-					String tankerName = null;
-
-					// Parcourir les observations pour trouver un éventuel Tanker
-					for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
-						if (couple.getLeft().getLocationId().equals(nextNodeId)) {
-							List<Couple<Observation, String>> observations = couple.getRight();
-							for (Couple<Observation, String> obs : observations) {
-								if (obs.getLeft().getName().equals("AgentName")
-										&& (obs.getRight().contains("Tank") || obs.getRight().contains("tank"))) {
-									tankerFound = true;
-									tankerName = obs.getRight();
+					// Attendre la réponse du Tanker
+					MessageTemplate msgTemplate = MessageTemplate.and(
+							MessageTemplate.MatchProtocol("TANKER-MOVED"),
+							MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+					ACLMessage msgReceived = this.myAgent.blockingReceive(msgTemplate, 10000);
+					if (msgReceived != null) {
+						System.out.println(this.myAgent.getLocalName() + " - Réponse du Tanker : "
+								+ msgReceived.getContent());
+						// Le Tanker a déménagé, on peut continuer
+						moved = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
+					} else {
+						// On choisit un autre nœud voisin
+						System.out.println(this.myAgent.getLocalName()
+								+ " - Pas de réponse du Tanker, on essaie un autre nœud voisin");
+						// Essayer de trouver un autre nœud voisin
+						boolean foundAlternative = false;
+						for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
+							String alternative = couple.getLeft().getLocationId();
+							if (!alternative.equals(myPosition.getLocationId())
+									&& !alternative.equals(nextNodeId)) {
+								System.out.println(
+										this.myAgent.getLocalName() + " - Tentative d'alternative vers "
+												+ alternative);
+								moved = ((AbstractDedaleAgent) this.myAgent)
+										.moveTo(new GsLocation(alternative));
+								if (moved) {
+									foundAlternative = true;
 									break;
 								}
 							}
-							if (tankerFound)
-								break;
 						}
-					}
-
-					if (tankerFound) {
-						// Un Tanker est sur notre chemin, lui demander de se déplacer
-						System.out.println(
-								this.myAgent.getLocalName() + " - Tanker détecté sur " + nextNodeId);
-						TellTankerToMoveBehaviour tellTankerBehaviour = new TellTankerToMoveBehaviour(
-								(AbstractDedaleAgent) this.myAgent, tankerName, myPosition.getLocationId());
-						this.myAgent.addBehaviour(tellTankerBehaviour);
-
-						// Attendre la réponse du Tanker
-						MessageTemplate msgTemplate = MessageTemplate.and(
-								MessageTemplate.MatchProtocol("TANKER-MOVED"),
-								MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-						ACLMessage msgReceived = this.myAgent.blockingReceive(msgTemplate, 10000);
-						if (msgReceived != null) {
-							System.out.println(this.myAgent.getLocalName() + " - Réponse du Tanker : "
-									+ msgReceived.getContent());
-							// Le Tanker a déménagé, on peut continuer
-							moved = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(nextNodeId));
-						} else {
-							// On choisit un autre nœud voisin
+						if (!foundAlternative) {
 							System.out.println(this.myAgent.getLocalName()
-									+ " - Pas de réponse du Tanker, on essaie un autre nœud voisin");
-							// Essayer de trouver un autre nœud voisin
-							boolean foundAlternative = false;
-							for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
-								String alternative = couple.getLeft().getLocationId();
-								if (!alternative.equals(myPosition.getLocationId())
-										&& !alternative.equals(nextNodeId)) {
-									System.out.println(
-											this.myAgent.getLocalName() + " - Tentative d'alternative vers "
-													+ alternative);
-									moved = ((AbstractDedaleAgent) this.myAgent)
-											.moveTo(new GsLocation(alternative));
-									if (moved) {
-										foundAlternative = true;
-										break;
-									}
-								}
-							}
-							if (!foundAlternative) {
-								System.out.println(this.myAgent.getLocalName()
-										+ " - Aucune alternative trouvée, attente prolongée");
-								// Attendre plus longtemps avant de réessayer
-								try {
-									this.myAgent.doWait(2000);
-								} catch (Exception e) {
-									e.printStackTrace();
-								}
+									+ " - Aucune alternative trouvée, attente prolongée");
+							// Attendre plus longtemps avant de réessayer
+							try {
+								this.myAgent.doWait(2000);
+							} catch (Exception e) {
+								e.printStackTrace();
 							}
 						}
 					}
+				}
 
-					// Si ce n'est pas un Tanker ou si la demande a échoué, continuer avec la
-					// gestion
-					// normale des collisions
+				// Si ce n'est pas un Tanker ou si la demande a échoué, continuer avec la
+				// gestion
+				// normale des collisions
 
-					// Attendre un temps aléatoire pour désynchroniser les agents
-					int waitTime = 500 + (int) (Math.random() * 1000);
+				// Attendre un temps aléatoire pour désynchroniser les agents
+				int waitTime = 500 + (int) (Math.random() * 1000);
+				try {
+					this.myAgent.doWait(waitTime);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+				// Essayer un autre nœud voisin (exploration locale)
+				boolean anySuccess = false;
+				lobs = ((AbstractDedaleAgent) this.myAgent).observe();
+				for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
+					if (!couple.getLeft().getLocationId().equals(myPosition.getLocationId())
+							&& !couple.getLeft().getLocationId().equals(nextNodeId)) {
+						String alternativeNodeId = couple.getLeft().getLocationId();
+						System.out.println(this.myAgent.getLocalName() + " - Tentative d'alternative vers "
+								+ alternativeNodeId);
+						moved = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(alternativeNodeId));
+						if (moved) {
+							anySuccess = true;
+							break; // Sortir de la boucle si le déplacement a réussi
+						}
+					}
+				}
+
+				// Si aucune alternative n'a fonctionné
+				if (!anySuccess) {
+					System.out.println(this.myAgent.getLocalName()
+							+ " - Toutes les alternatives ont échoué, attente plus longue");
+					// Attendre plus longtemps avant de réessayer
 					try {
-						this.myAgent.doWait(waitTime);
+						this.myAgent.doWait(5000);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-
-					// Essayer un autre nœud voisin (exploration locale)
-					boolean anySuccess = false;
-					lobs = ((AbstractDedaleAgent) this.myAgent).observe();
-					for (Couple<Location, List<Couple<Observation, String>>> couple : lobs) {
-						if (!couple.getLeft().getLocationId().equals(myPosition.getLocationId())
-								&& !couple.getLeft().getLocationId().equals(nextNodeId)) {
-							String alternativeNodeId = couple.getLeft().getLocationId();
-							System.out.println(this.myAgent.getLocalName() + " - Tentative d'alternative vers "
-									+ alternativeNodeId);
-							moved = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(alternativeNodeId));
-							if (moved) {
-								anySuccess = true;
-								break; // Sortir de la boucle si le déplacement a réussi
-							}
-						}
-					}
-
-					// Si aucune alternative n'a fonctionné
-					if (!anySuccess) {
-						System.out.println(this.myAgent.getLocalName()
-								+ " - Toutes les alternatives ont échoué, attente plus longue");
-						// Attendre plus longtemps avant de réessayer
-						try {
-							this.myAgent.doWait(5000);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
 				}
 			}
-
 		}
 
 	}
