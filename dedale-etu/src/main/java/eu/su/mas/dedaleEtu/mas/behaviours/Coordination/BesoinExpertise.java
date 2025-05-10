@@ -4,9 +4,9 @@ import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
+import eu.su.mas.dedaleEtu.mas.behaviours.Exploration.ExploCoopBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.Collecte.ExploCollectBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
-import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -544,9 +544,66 @@ public class BesoinExpertise extends SimpleBehaviour {
             ((AbstractDedaleAgent) this.myAgent).sendMessage(msgAnnulation);
         }
 
+        // Déplacer l'agent pour l'éloigner du coffre
+        deplacementPostEchec();
+
+        if (this.myAgent.getLocalName().contains("C")) {
+            this.myAgent.addBehaviour(
+                    new ExploCollectBehaviour((AbstractDedaleAgent) this.myAgent, myMap, listeAgents));
+        } else {
+            this.myAgent.addBehaviour(
+                    new ExploCoopBehaviour((AbstractDedaleAgent) this.myAgent, myMap, listeAgents));
+        }
+
+        System.out.println(myAgent.getLocalName() + " - Relance de l'exploration après abandon d'ouverture");
+
         etatActuel = Etat.TERMINE;
         termine = true;
+    }
 
+    /**
+     * Déplace l'agent vers un nœud voisin après un échec d'ouverture
+     * pour éviter que l'agent ne reste bloqué sur le même coffre
+     */
+    private void deplacementPostEchec() {
+        Location maPosition = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+        if (maPosition == null) {
+            System.out.println(myAgent.getLocalName() + " - Position actuelle inconnue, impossible de se déplacer");
+            return;
+        }
+
+        // Récupérer la liste des nœuds voisins accessibles
+        List<Couple<Location, List<Couple<Observation, String>>>> observations = ((AbstractDedaleAgent) this.myAgent)
+                .observe();
+
+        List<String> voisinsAccessibles = new ArrayList<>();
+
+        for (Couple<Location, List<Couple<Observation, String>>> observation : observations) {
+            // Ne pas inclure le nœud actuel
+            if (!observation.getLeft().getLocationId().equals(maPosition.getLocationId())) {
+                voisinsAccessibles.add(observation.getLeft().getLocationId());
+            }
+        }
+
+        if (voisinsAccessibles.isEmpty()) {
+            System.out.println(myAgent.getLocalName() + " - Aucun nœud voisin accessible pour s'éloigner");
+            return;
+        }
+
+        // Choisir un nœud voisin aléatoirement
+        int indexAleatoire = (int) (Math.random() * voisinsAccessibles.size());
+        String noeudCible = voisinsAccessibles.get(indexAleatoire);
+
+        System.out.println(myAgent.getLocalName() + " - Je m'éloigne du coffre vers le nœud " + noeudCible);
+
+        // Déplacement vers le nœud choisi
+        boolean moved = ((AbstractDedaleAgent) this.myAgent).moveTo(new GsLocation(noeudCible));
+
+        if (moved) {
+            System.out.println(myAgent.getLocalName() + " - Déplacement réussi vers " + noeudCible);
+        } else {
+            System.out.println(myAgent.getLocalName() + " - Échec du déplacement vers " + noeudCible);
+        }
     }
 
     @Override
