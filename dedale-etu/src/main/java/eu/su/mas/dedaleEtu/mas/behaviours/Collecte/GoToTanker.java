@@ -114,7 +114,7 @@ public class GoToTanker extends SimpleBehaviour {
             List<Couple<Observation, String>> entites = obs.getRight();
             for (Couple<Observation, String> entite : entites) {
                 if (entite.getLeft() != null && entite.getLeft().getName().equals("AgentName") &&
-                        (entite.getRight().contains("Tanker") || entite.getRight().contains("tanker"))) {
+                        (entite.getRight().contains("Tank") || entite.getRight().contains("tank"))) {
 
                     tankerName = entite.getRight();
                     tankerLocation = obs.getLeft().getLocationId();

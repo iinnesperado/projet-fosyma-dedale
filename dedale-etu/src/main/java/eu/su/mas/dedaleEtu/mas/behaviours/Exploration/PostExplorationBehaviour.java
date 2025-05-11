@@ -44,6 +44,7 @@ public class PostExplorationBehaviour extends TickerBehaviour {
     private List<String> list_agentNames;
     private List<Treasure> listeTresors = new ArrayList<>();
     private Observation treasure;
+    private List<Couple<String, Couple<LocalDateTime, LocalDateTime>>> lastContact;
 
     /**
      * 
@@ -52,11 +53,12 @@ public class PostExplorationBehaviour extends TickerBehaviour {
      * @param agentNames name of the agents to share the map with
      */
     public PostExplorationBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap,
-            List<String> agentNames) {
+            List<String> agentNames, List<Treasure> treasures,List<Couple<String, Couple<LocalDateTime, LocalDateTime>>> lastContact) {
         super(myagent, 500);
         this.myMap = myMap;
         this.list_agentNames = agentNames;
-        this.listeTresors = new ArrayList<>();
+        this.listeTresors = treasures;
+        this.lastContact = lastContact;
     }
 
     @Override
@@ -132,7 +134,7 @@ public class PostExplorationBehaviour extends TickerBehaviour {
                         // this.myMap, obs.getRight()));
                         this.myAgent
                                 .addBehaviour(new SendTresorBehaviour((AbstractDedaleAgent) this.myAgent,
-                                        this.listeTresors, obs.getRight()));
+                                        this.listeTresors, obs.getRight(), lastContact));
                         this.myAgent.addBehaviour(new ReceiveTresorBehaviour(this.listeTresors));
 
                     default:

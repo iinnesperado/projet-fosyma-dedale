@@ -2,8 +2,6 @@ package eu.su.mas.dedaleEtu.mas.behaviours.Communication;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
-import eu.su.mas.dedaleEtu.mas.knowledge.TresorMessage;
-
 import jade.core.AID;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -11,8 +9,11 @@ import jade.lang.acl.MessageTemplate;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import dataStructures.tuple.Couple;
 
 /**
  * Envoie la liste des trésors avec la date de dernière mise à jour à un agent
@@ -24,28 +25,32 @@ public class SendTresorBehaviour extends OneShotBehaviour {
 
     private final List<Treasure> listeTresors;
     private final String receiverName;
+    private List<Couple<String, Couple<LocalDateTime,LocalDateTime>>> lastContact;
 
     public SendTresorBehaviour(AbstractDedaleAgent agent, List<Treasure> listeTresors,
-            String receiverName) {
+            String receiverName, List<Couple<String, Couple<LocalDateTime,LocalDateTime>>> lastContact) {
         super(agent);
         this.listeTresors = listeTresors;
         this.receiverName = receiverName;
+        this.lastContact = lastContact;
     }
 
     @Override
     public void action() {
 
-        // On envoit un PING pour vérifier la présence de l'agent cible
-
-        ACLMessage ping = new ACLMessage(ACLMessage.INFORM);
-        ping.setProtocol("PING");
-        ping.setSender(myAgent.getAID());
-        ping.addReceiver(new AID(receiverName, AID.ISLOCALNAME));
-        ((AbstractDedaleAgent) myAgent).sendMessage(ping);
-        System.out.println(myAgent.getLocalName() + " a envoyé un PING à " + receiverName);
+		System.out.println(myAgent.getLocalName() + " veut envoyer un PING à " + receiverName);
+        if (shouldContact(receiverName)) {
+            // On envoit un PING pour vérifier la présence de l'agent cible
+            updateLastContact(receiverName);
+            ACLMessage ping = new ACLMessage(ACLMessage.INFORM);
+            ping.setProtocol("PING");
+            ping.setSender(myAgent.getAID());
+            ping.addReceiver(new AID(receiverName, AID.ISLOCALNAME));
+            ((AbstractDedaleAgent) myAgent).sendMessage(ping);
+            System.out.println(myAgent.getLocalName() + " a envoyé un PING à " + receiverName);
+        }
 
         // Si je recçois un message de type PING, je peux envoyer ma liste de trésors
-
         MessageTemplate msgTemplate = MessageTemplate.and(
                 MessageTemplate.MatchProtocol("PING"),
                 MessageTemplate.MatchPerformative(ACLMessage.INFORM));
@@ -69,4 +74,31 @@ public class SendTresorBehaviour extends OneShotBehaviour {
             e.printStackTrace();
         }
     }
+
+    private boolean shouldContact(String agentName) {
+		for (Couple<String, Couple<LocalDateTime,LocalDateTime>> agent : lastContact) {
+            System.out.println(myAgent.getLocalName() + " - " + agent.getLeft() + " == " + agentName);
+			if (agent.getLeft().equals(agentName)) {
+			    Couple<LocalDateTime, LocalDateTime> contact = agent.getRight(); // contact.getRight() is the last contact time for Treasure sharing
+				Duration timeSinceLastContact = Duration.between(contact.getRight(), LocalDateTime.now());
+				return timeSinceLastContact.getSeconds() >= 20; // Update if 1+ minutes passed
+			}
+		}
+		return true; // No previous contact found
+	}
+
+	private void updateLastContact(String agentName) {
+        // System.out.println(myAgent.getLocalName() + " LAST TIME CONTACT LIST (trésor)" + lastContact);
+		for (int i = 0; i < lastContact.size(); i++) {
+			if (lastContact.get(i).getLeft().equals(agentName)) {
+                LocalDateTime mapTime = lastContact.get(i).getRight().getLeft();
+                Couple<LocalDateTime, LocalDateTime> times = new Couple<>(mapTime, LocalDateTime.now()); // Update only the time for Treasure sharing
+				lastContact.set(i, new Couple<>(agentName, times));
+                System.out.println(myAgent.getLocalName() + " a mis à jour le contact (trésor) avec " + agentName);
+				return;
+			}
+		}
+		lastContact.add(new Couple<>(agentName, new Couple<>(LocalDateTime.now(), LocalDateTime.now())));
+        System.out.println(myAgent.getLocalName() + " a ajouté un nouveau contact (trésor) " + agentName + lastContact);
+	}
 }

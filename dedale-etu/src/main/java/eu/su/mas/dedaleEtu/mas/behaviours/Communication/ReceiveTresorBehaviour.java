@@ -1,15 +1,11 @@
 package eu.su.mas.dedaleEtu.mas.behaviours.Communication;
 
-import eu.su.mas.dedale.env.Location;
-import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
-import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 

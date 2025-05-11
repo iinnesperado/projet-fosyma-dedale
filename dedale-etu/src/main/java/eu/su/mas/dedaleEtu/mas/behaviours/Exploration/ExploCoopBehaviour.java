@@ -1,5 +1,6 @@
 package eu.su.mas.dedaleEtu.mas.behaviours.Exploration;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -61,6 +62,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 	private List<Couple<String, MapRepresentation>> list_map;
 
 	private List<Treasure> listeTresors = new ArrayList<>();
+	private List<Couple<String, Couple<LocalDateTime, LocalDateTime>>> lastContact; //last contacted and agent Couple<Map time, Treasure time>
 
 	/**
 	 * 
@@ -74,6 +76,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 		this.list_agentNames = agentNames;
 		this.list_map = new ArrayList<>();
 		this.listeTresors = new ArrayList<>();
+		this.lastContact = new ArrayList<>();
 	}
 
 	@Override
@@ -145,7 +148,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				System.out.println(this.myAgent.getLocalName() + " - J'AI TERMINÉ L'EXPLORATION");
 				System.out.println(this.myAgent.getLocalName() + " - Je commence la post-exploration");
 				this.myAgent.addBehaviour(
-						new PostExplorationBehaviour(((AbstractDedaleAgent) myAgent), myMap, list_agentNames));
+						new PostExplorationBehaviour(((AbstractDedaleAgent) myAgent), myMap, list_agentNames, listeTresors, lastContact));
 			} else {
 				// 4) select next move.
 				// 4.1 If there exist one open node directly reachable, go for it,
@@ -235,10 +238,10 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 									this.myAgent
 											.addBehaviour(
 													new ReceiveMapBehaviour((AbstractDedaleAgent) this.myAgent,
-															this.myMap, obs.getRight()));
+															this.myMap, obs.getRight(), lastContact));
 									this.myAgent
 											.addBehaviour(new SendTresorBehaviour((AbstractDedaleAgent) this.myAgent,
-													this.listeTresors, obs.getRight()));
+													this.listeTresors, obs.getRight(), lastContact));
 									this.myAgent.addBehaviour(new ReceiveTresorBehaviour(this.listeTresors));
 									this.myAgent.addBehaviour(new OffreExpertise(
 											(AbstractDedaleAgent) this.myAgent, this.myMap));

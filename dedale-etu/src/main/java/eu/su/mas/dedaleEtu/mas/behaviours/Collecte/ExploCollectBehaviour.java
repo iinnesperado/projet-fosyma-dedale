@@ -64,6 +64,7 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
     private Integer placeRestantDiamond;
     private Integer placeRestantGold;
     private String tankerLocation;
+    private List<Couple<String, Couple<LocalDateTime, LocalDateTime>>> lastContact;
 
     /**
      * 
@@ -78,17 +79,18 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
         this.myMap = myMap;
         this.list_agentNames = agentNames;
         this.list_map = new ArrayList<>();
-        List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace();
-        for (Couple<Observation, Integer> couple : backPack) {
-            if (couple.getLeft().getName().equals("Gold")) {
-                this.placeRestantGold = couple.getRight();
-                System.out.println("Place restante pour l'or : " + this.placeRestantGold);
-            } else if (couple.getLeft().getName().equals("Diamond")) {
-                this.placeRestantDiamond = couple.getRight();
-                System.out.println("Place restante pour le diamant : " + this.placeRestantDiamond);
-            }
-        }
+        // List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace();
+        // for (Couple<Observation, Integer> couple : backPack) {
+        //     if (couple.getLeft().getName().equals("Gold")) {
+        //         this.placeRestantGold = couple.getRight();
+        //         System.out.println("Place restante pour l'or : " + this.placeRestantGold);
+        //     } else if (couple.getLeft().getName().equals("Diamond")) {
+        //         this.placeRestantDiamond = couple.getRight();
+        //         System.out.println("Place restante pour le diamant : " + this.placeRestantDiamond);
+        //     }
+        // }
         this.tankerLocation = null;
+        this.lastContact = new ArrayList<>();
     }
 
     @Override
@@ -164,7 +166,7 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                 System.out.println(this.myAgent.getLocalName() + " - Tous les noeuds ont été visités.");
                 System.out.println("FIN DE L'EXPLORATION DE " + this.myAgent.getLocalName());
                 myAgent.addBehaviour(new PostCollectBehaviour(
-                        (AbstractDedaleAgent) this.myAgent, this.myMap, this.list_agentNames));
+                        (AbstractDedaleAgent) this.myAgent, this.myMap, this.list_agentNames, listeTresors, lastContact));
                 finished = true;
             } else {
                 // 4) select next move.
@@ -266,10 +268,10 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
                                     this.myAgent
                                             .addBehaviour(
                                                     new ReceiveMapBehaviour((AbstractDedaleAgent) this.myAgent,
-                                                            this.myMap, obs.getRight()));
+                                                            this.myMap, obs.getRight(), lastContact));
                                     this.myAgent
                                             .addBehaviour(new SendTresorBehaviour((AbstractDedaleAgent) this.myAgent,
-                                                    this.listeTresors, obs.getRight()));
+                                                    this.listeTresors, obs.getRight(), lastContact));
                                     this.myAgent.addBehaviour(new ReceiveTresorBehaviour(this.listeTresors));
                                     this.myAgent.addBehaviour(new OffreExpertise(
                                             (AbstractDedaleAgent) this.myAgent, this.myMap));

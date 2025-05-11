@@ -1,9 +1,13 @@
 package eu.su.mas.dedaleEtu.mas.behaviours.Communication;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import dataStructures.serializableGraph.SerializableSimpleGraph;
+import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
@@ -21,27 +25,34 @@ public class ReceiveMapBehaviour extends OneShotBehaviour {
 	// private List<String> list_agentNames;
 	// private boolean finished = false;
 	private String agent;
+	private List<Couple<String, Couple<LocalDateTime,LocalDateTime>>> lastContact;
 
 	/**
 	 * Current knowledge of the agent regarding the environment
 	 */
 	private MapRepresentation myMap;
 
-	public ReceiveMapBehaviour(final AbstractDedaleAgent myAgent, MapRepresentation myMap, String agentName) {
+	public ReceiveMapBehaviour(final AbstractDedaleAgent myAgent, MapRepresentation myMap, String agentName, 
+			List<Couple<String, Couple<LocalDateTime,LocalDateTime>>> lastContact) {
 		super(myAgent);
 		this.myMap = myMap;
 		this.agent = agentName;
+		this.lastContact = lastContact;
 	}
 
 	@Override
 	public void action() {
 
-		ACLMessage ping = new ACLMessage(ACLMessage.INFORM);
-		ping.setProtocol("PING");
-		ping.setSender(myAgent.getAID());
-		ping.addReceiver(new AID(agent, AID.ISLOCALNAME));
-		((AbstractDedaleAgent) myAgent).sendMessage(ping);
-		System.out.println(myAgent.getLocalName() + " a envoyé un PING à " + agent);
+		System.out.println(myAgent.getLocalName() + " veut envoyer un PING à " + agent);
+		if (shouldContact(agent)){
+			updateLastContact(agent);
+			ACLMessage ping = new ACLMessage(ACLMessage.INFORM);
+			ping.setProtocol("PING");
+			ping.setSender(myAgent.getAID());
+			ping.addReceiver(new AID(agent, AID.ISLOCALNAME));
+			((AbstractDedaleAgent) myAgent).sendMessage(ping);
+			System.out.println(myAgent.getLocalName() + " a envoyé un PING à " + agent);
+		}
 
 		// On s'attend à recevoir un PING
 		// Création du template pour recevoir un message de type PING
@@ -95,6 +106,33 @@ public class ReceiveMapBehaviour extends OneShotBehaviour {
 			}
 		}
 		// finished = true;
+	}
+
+	private boolean shouldContact(String agentName) {
+		for (Couple<String, Couple<LocalDateTime,LocalDateTime>> agent : lastContact) {
+            System.out.println(myAgent.getLocalName() + " - " + agent.getLeft() + " == " + agentName);
+			if (agent.getLeft().equals(agentName)) {
+			    Couple<LocalDateTime, LocalDateTime> contact = agent.getRight(); // contact.getLeft() is the last contact time for MapRepresentation sharing
+				Duration timeSinceLastContact = Duration.between(contact.getLeft(), LocalDateTime.now());
+				return timeSinceLastContact.getSeconds() >= 15; // Update if 1+ minutes passed
+			}
+		}
+		return true; // No previous contact found
+	}
+
+	private void updateLastContact(String agentName) {
+        // System.out.println(myAgent.getLocalName() + " LAST TIME CONTACT LIST (Map)" + lastContact);
+		for (int i = 0; i < lastContact.size(); i++) {
+			if (lastContact.get(i).getLeft().equals(agentName)) {
+                LocalDateTime treasureTime = lastContact.get(i).getRight().getRight();
+                Couple<LocalDateTime, LocalDateTime> times = new Couple<>(LocalDateTime.now(), treasureTime); // Update only the time for MapRepresentation sharing
+				lastContact.set(i, new Couple<>(agentName, times));
+                System.out.println(myAgent.getLocalName() + " a mis à jour le contact (Map) avec " + agentName);
+				return;
+			}
+		}
+		lastContact.add(new Couple<>(agentName, new Couple<>(LocalDateTime.now(), LocalDateTime.now())));
+        System.out.println(myAgent.getLocalName() + " a ajouté un nouveau contact (Map) avec " + agentName + lastContact);
 	}
 
 }

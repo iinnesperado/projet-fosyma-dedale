@@ -43,10 +43,11 @@ public class PostCollectBehaviour extends TickerBehaviour {
      */
     private MapRepresentation myMap;
     private List<String> list_agentNames;
-    private List<Treasure> listeTresors = new ArrayList<>();
+    private List<Treasure> listeTresors;
     private Integer placeRestantGold = null;
     private Integer placeRestantDiamond = null;
     private String tankerLocation = null;
+    private List<Couple<String, Couple<LocalDateTime, LocalDateTime>>> lastContact;
 
     /**
      * 
@@ -55,22 +56,23 @@ public class PostCollectBehaviour extends TickerBehaviour {
      * @param agentNames name of the agents to share the map with
      */
     public PostCollectBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap,
-            List<String> agentNames) {
+            List<String> agentNames, List<Treasure> treasures, List<Couple<String, Couple<LocalDateTime, LocalDateTime>>> lastContact) {
         super(myagent, 500);
         this.myMap = myMap;
         this.list_agentNames = agentNames;
-        this.listeTresors = new ArrayList<>();
-        List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace();
-        for (Couple<Observation, Integer> couple : backPack) {
-            if (couple.getLeft().getName().equals("Gold")) {
-                this.placeRestantGold = couple.getRight();
-                System.out.println("Place restante pour l'or : " + this.placeRestantGold);
-            } else if (couple.getLeft().getName().equals("Diamond")) {
-                this.placeRestantDiamond = couple.getRight();
-                System.out.println("Place restante pour le diamant : " + this.placeRestantDiamond);
-            }
-        }
+        this.listeTresors = treasures;
+        // List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace();
+        // for (Couple<Observation, Integer> couple : backPack) {
+        //     if (couple.getLeft().getName().equals("Gold")) {
+        //         this.placeRestantGold = couple.getRight();
+        //         System.out.println("Place restante pour l'or : " + this.placeRestantGold);
+        //     } else if (couple.getLeft().getName().equals("Diamond")) {
+        //         this.placeRestantDiamond = couple.getRight();
+        //         System.out.println("Place restante pour le diamant : " + this.placeRestantDiamond);
+        //     }
+        // }
         this.tankerLocation = null;
+        this.lastContact = lastContact;
     }
 
     @Override
@@ -154,7 +156,7 @@ public class PostCollectBehaviour extends TickerBehaviour {
                         // this.myMap, obs.getRight()));
                         this.myAgent
                                 .addBehaviour(new SendTresorBehaviour((AbstractDedaleAgent) this.myAgent,
-                                        this.listeTresors, obs.getRight()));
+                                        this.listeTresors, obs.getRight(), lastContact));
                         this.myAgent.addBehaviour(new ReceiveTresorBehaviour(this.listeTresors));
 
                     default:
