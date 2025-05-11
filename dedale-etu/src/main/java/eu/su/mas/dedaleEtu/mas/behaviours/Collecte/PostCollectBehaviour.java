@@ -7,7 +7,7 @@ import java.util.List;
 import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
-
+import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.behaviours.Communication.ReceiveTresorBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.Communication.SendMapBehaviour;
@@ -56,22 +56,25 @@ public class PostCollectBehaviour extends TickerBehaviour {
      * @param agentNames name of the agents to share the map with
      */
     public PostCollectBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap,
-            List<String> agentNames, List<Treasure> treasures, List<Couple<String, Couple<LocalDateTime, LocalDateTime>>> lastContact) {
+            List<String> agentNames, List<Treasure> treasures,
+            List<Couple<String, Couple<LocalDateTime, LocalDateTime>>> lastContact, String tankerLocation) {
         super(myagent, 500);
         this.myMap = myMap;
         this.list_agentNames = agentNames;
         this.listeTresors = treasures;
-        // List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace();
+        // List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent)
+        // this.myAgent).getBackPackFreeSpace();
         // for (Couple<Observation, Integer> couple : backPack) {
-        //     if (couple.getLeft().getName().equals("Gold")) {
-        //         this.placeRestantGold = couple.getRight();
-        //         System.out.println("Place restante pour l'or : " + this.placeRestantGold);
-        //     } else if (couple.getLeft().getName().equals("Diamond")) {
-        //         this.placeRestantDiamond = couple.getRight();
-        //         System.out.println("Place restante pour le diamant : " + this.placeRestantDiamond);
-        //     }
+        // if (couple.getLeft().getName().equals("Gold")) {
+        // this.placeRestantGold = couple.getRight();
+        // System.out.println("Place restante pour l'or : " + this.placeRestantGold);
+        // } else if (couple.getLeft().getName().equals("Diamond")) {
+        // this.placeRestantDiamond = couple.getRight();
+        // System.out.println("Place restante pour le diamant : " +
+        // this.placeRestantDiamond);
         // }
-        this.tankerLocation = null;
+        // }
+        this.tankerLocation = tankerLocation;
         this.lastContact = lastContact;
     }
 
@@ -157,26 +160,51 @@ public class PostCollectBehaviour extends TickerBehaviour {
                         this.myAgent
                                 .addBehaviour(new SendTresorBehaviour((AbstractDedaleAgent) this.myAgent,
                                         this.listeTresors, obs.getRight(), lastContact));
-                        this.myAgent.addBehaviour(new ReceiveTresorBehaviour(this.listeTresors));
+                        // this.myAgent.addBehaviour(new ReceiveTresorBehaviour(this.listeTresors));
 
                     default:
                         break;
                 }
 
             }
-            // Random move from the current position
-            Random r = new Random();
-            int moveId = 1 + r.nextInt(lobs.size() - 1);
-            // The move action (if any) should be the last action of your behaviour
-            ((AbstractDedaleAgent) this.myAgent).moveTo(lobs.get(moveId).getLeft());
+
+            // // Random move from the current position
+            // Random r = new Random();
+            // int moveId = 1 + r.nextInt(lobs.size() - 1);
+            // // The move action (if any) should be the last action of your behaviour
+            // ((AbstractDedaleAgent) this.myAgent).moveTo(lobs.get(moveId).getLeft());
+            List<String> minPath = new ArrayList<>();
+            int min_path_length = Integer.MAX_VALUE;
+            // On va chercher le trésor le plus proche pour le récolter
+            if (this.listeTresors.size() > 0) {
+                for (Treasure tresor : this.listeTresors) {
+                    List<String> path = this.myMap.getShortestPath(myPosition.getLocationId(),
+                            tresor.getPosition().getLocationId());
+                    if (path.size() < min_path_length) {
+                        min_path_length = path.size();
+                        minPath = path;
+                    }
+                }
+            }
+            if (minPath.size() > 0) {
+                System.out.println(this.myAgent.getLocalName() + " - Meilleur chemin vers le trésor: " + minPath);
+                // On se déplace vers le trésor le plus proche
+                Location nextLocation = new GsLocation(minPath.get(0));
+                ((AbstractDedaleAgent) this.myAgent).moveTo(nextLocation);
+            } else {
+                // Si pas de trésor, on se déplace aléatoirement
+                Random r = new Random();
+                int moveId = 1 + r.nextInt(lobs.size() - 1);
+                // The move action (if any) should be the last action of your behaviour
+                ((AbstractDedaleAgent) this.myAgent).moveTo(lobs.get(moveId).getLeft());
+            }
+
         }
     }
 
     /**
-     * Renvoie la place restante dans le sac-a-dos de l'agent
      * 
-     * @param typeTresor le tésor dont on veux savoir l'expace restant dans le
-     *                   sac-a-ados
+    
      */
     public Integer getPlaceRestantTresor(String typeTresor) {
         List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace();
@@ -208,7 +236,6 @@ public class PostCollectBehaviour extends TickerBehaviour {
                 System.out
                         .println(this.myAgent.getLocalName() + " - Collecté : " + collected + " unités " + typeTresor);
                 nouveauTresor.setQuantity(quantity - collected);
-                this.placeRestantGold -= collected;
             } else {
                 System.out.println(
                         this.myAgent.getLocalName() + " - Impossible d'ouvrir le coffre contenant " + typeTresor);

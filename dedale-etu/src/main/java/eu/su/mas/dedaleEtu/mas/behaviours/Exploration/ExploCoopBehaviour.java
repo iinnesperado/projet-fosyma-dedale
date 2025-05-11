@@ -16,7 +16,7 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
-import eu.su.mas.dedaleEtu.mas.behaviours.Collecte.TellTankerToMoveBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.TellTankerToMoveBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.Communication.ReceiveMapBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.Communication.ReceiveTresorBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.Communication.SendMapBehaviour;
@@ -62,7 +62,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 	private List<Couple<String, MapRepresentation>> list_map;
 
 	private List<Treasure> listeTresors = new ArrayList<>();
-	private List<Couple<String, Couple<LocalDateTime, LocalDateTime>>> lastContact; //last contacted and agent Couple<Map time, Treasure time>
+	private List<Couple<String, Couple<LocalDateTime, LocalDateTime>>> lastContact; // last contacted and agent
+																					// Couple<Map time, Treasure time>
 
 	/**
 	 * 
@@ -148,7 +149,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				System.out.println(this.myAgent.getLocalName() + " - J'AI TERMINÉ L'EXPLORATION");
 				System.out.println(this.myAgent.getLocalName() + " - Je commence la post-exploration");
 				this.myAgent.addBehaviour(
-						new PostExplorationBehaviour(((AbstractDedaleAgent) myAgent), myMap, list_agentNames, listeTresors, lastContact));
+						new PostExplorationBehaviour(((AbstractDedaleAgent) myAgent), myMap, list_agentNames,
+								listeTresors, lastContact));
 			} else {
 				// 4) select next move.
 				// 4.1 If there exist one open node directly reachable, go for it,
@@ -439,7 +441,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				// normale des collisions
 
 				// Attendre un temps aléatoire pour désynchroniser les agents
-				int waitTime = 500 + (int) (Math.random() * 1000);
+				int waitTime = (int) (Math.random() * 2000 + 1000); // entre 1 et 3 secondes
 				try {
 					this.myAgent.doWait(waitTime);
 				} catch (Exception e) {
@@ -467,12 +469,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				if (!anySuccess) {
 					System.out.println(this.myAgent.getLocalName()
 							+ " - Toutes les alternatives ont échoué, attente plus longue");
-					// Attendre plus longtemps avant de réessayer
-					try {
-						this.myAgent.doWait(5000);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+					return; // Sortir de l'action pour réessayer au prochain cycle
 				}
 			}
 		}

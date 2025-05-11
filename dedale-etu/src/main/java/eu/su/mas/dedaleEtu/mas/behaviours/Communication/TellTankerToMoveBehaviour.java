@@ -1,4 +1,4 @@
-package eu.su.mas.dedaleEtu.mas.behaviours.Collecte;
+package eu.su.mas.dedaleEtu.mas.behaviours.Communication;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
