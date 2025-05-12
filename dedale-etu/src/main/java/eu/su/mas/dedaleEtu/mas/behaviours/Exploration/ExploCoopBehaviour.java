@@ -441,7 +441,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				// normale des collisions
 
 				// Attendre un temps aléatoire pour désynchroniser les agents
-				int waitTime = (int) (Math.random() * 2000 + 1000); // entre 1 et 3 secondes
+				int waitTime = (int) (Math.random() * 7000 + 1000); // entre 1 et 3 secondes
 				try {
 					this.myAgent.doWait(waitTime);
 				} catch (Exception e) {
