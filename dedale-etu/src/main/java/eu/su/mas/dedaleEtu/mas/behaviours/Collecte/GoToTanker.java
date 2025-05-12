@@ -8,6 +8,7 @@ import eu.su.mas.dedale.env.Location;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.env.gs.GsLocation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
+import eu.su.mas.dedaleEtu.mas.behaviours.Exploration.ExploCoopBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import jade.core.Agent;
 import jade.core.behaviours.SimpleBehaviour;
@@ -264,10 +265,17 @@ public class GoToTanker extends SimpleBehaviour {
     public boolean done() {
         // Si comportement terminé, relancer l'exploration
         if (finished) {
-            // Relancer l'exploration
-            this.myAgent.addBehaviour(
-                    new ExploCollectBehaviour((AbstractDedaleAgent) this.myAgent, myMap, agentList));
-            System.out.println(myAgent.getLocalName() + " - Fin du comportement GoToTanker, relance de l'exploration");
+            if (myAgent.getLocalName().contains("C")) {
+                System.out.println(myAgent.getLocalName()
+                        + " - Fin du comportement GoToTanker, relance de l'exploration-collection");
+                this.myAgent.addBehaviour(
+                        new ExploCollectBehaviour((AbstractDedaleAgent) this.myAgent, myMap, agentList));
+            } else if (myAgent.getLocalName().contains("E")) {
+                System.out.println(myAgent.getLocalName()
+                        + " - Fin du comportement GoToTanker, relance de l'exploration");
+                this.myAgent.addBehaviour(
+                        new ExploCoopBehaviour((AbstractDedaleAgent) this.myAgent, myMap, agentList));
+            }
         }
         return finished;
     }

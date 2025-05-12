@@ -16,11 +16,11 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import eu.su.mas.dedaleEtu.mas.knowledge.Treasure;
-import eu.su.mas.dedaleEtu.mas.behaviours.Collecte.TellTankerToMoveBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.Communication.ReceiveMapBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.Communication.ReceiveTresorBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.Communication.SendMapBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.Communication.SendTresorBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.Communication.TellTankerToMoveBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.Coordination.BesoinExpertise;
 import eu.su.mas.dedaleEtu.mas.behaviours.Coordination.OffreExpertise;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
@@ -79,15 +79,17 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
         this.myMap = myMap;
         this.list_agentNames = agentNames;
         this.list_map = new ArrayList<>();
-        // List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace();
+        // List<Couple<Observation, Integer>> backPack = ((AbstractDedaleAgent)
+        // this.myAgent).getBackPackFreeSpace();
         // for (Couple<Observation, Integer> couple : backPack) {
-        //     if (couple.getLeft().getName().equals("Gold")) {
-        //         this.placeRestantGold = couple.getRight();
-        //         System.out.println("Place restante pour l'or : " + this.placeRestantGold);
-        //     } else if (couple.getLeft().getName().equals("Diamond")) {
-        //         this.placeRestantDiamond = couple.getRight();
-        //         System.out.println("Place restante pour le diamant : " + this.placeRestantDiamond);
-        //     }
+        // if (couple.getLeft().getName().equals("Gold")) {
+        // this.placeRestantGold = couple.getRight();
+        // System.out.println("Place restante pour l'or : " + this.placeRestantGold);
+        // } else if (couple.getLeft().getName().equals("Diamond")) {
+        // this.placeRestantDiamond = couple.getRight();
+        // System.out.println("Place restante pour le diamant : " +
+        // this.placeRestantDiamond);
+        // }
         // }
         this.tankerLocation = null;
         this.lastContact = new ArrayList<>();
@@ -121,7 +123,7 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
              * too quick
              */
             try {
-                this.myAgent.doWait(3000);
+                this.myAgent.doWait(5000);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -165,9 +167,10 @@ public class ExploCollectBehaviour extends SimpleBehaviour {
             if (!this.myMap.hasOpenNode()) {
                 System.out.println(this.myAgent.getLocalName() + " - Tous les noeuds ont été visités.");
                 System.out.println("FIN DE L'EXPLORATION DE " + this.myAgent.getLocalName());
-                myAgent.addBehaviour(new PostCollectBehaviour(
-                        (AbstractDedaleAgent) this.myAgent, this.myMap, this.list_agentNames, listeTresors, lastContact));
                 finished = true;
+                myAgent.addBehaviour(new PostCollectBehaviour(
+                        (AbstractDedaleAgent) this.myAgent, this.myMap, this.list_agentNames, listeTresors,
+                        lastContact, tankerLocation));
             } else {
                 // 4) select next move.
                 // 4.1 If there exist one open node directly reachable, go for it,
